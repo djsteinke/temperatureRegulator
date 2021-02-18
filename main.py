@@ -108,7 +108,7 @@ def favicon():
 
 if __name__ == '__main__':
     host_name = socket.gethostbyname(socket.gethostname())
-    print(host_name)
-    if host_name[0: 2] != "192":
+    print(host_name + "[" + host_name[0: 3] + "]")
+    if host_name[0: 3] != "192":
         host_name = "localhost"
     app.run(host=host_name, port=1983)
