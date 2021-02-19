@@ -1,9 +1,11 @@
+import logging
 import threading
 import time
 
-from main import logger
 from timer import Timer
 from settings import msg
+
+module_logger = logging.getLogger('main.program')
 
 
 class ProgramError(Exception):
@@ -18,10 +20,11 @@ class Program(object):
         self._step = 0
 
     def is_running(self):
-        logger.debug("run_program(" + str(self._started) + ")")
+        module_logger.debug("run_program(" + str(self._started) + ")")
         return self._started
 
     def run(self):
+        module_logger.debug("run()")
         print("Program.run()")
         self._step = 1
         self._started = True
@@ -30,27 +33,31 @@ class Program(object):
         self.run_step()
 
     def run_step(self):
+        module_logger.debug(f"run_step({self._step})")
         found = False
         if self._started:
             for obj in msg['program']:
                 if obj['step'] == self._step:
                     found = True
                     if not self._timer.is_running():
+                        module_logger.debug("_timer.start()")
                         self._timer.start()
                         # TODO set temp
                     if self._timer.get_elapsed_time() / 60 > obj['time']:
                         self._step += 1
+                        module_logger.debug(f"_step({self._step})")
                         msg['current']['step'] = self._step
                         self._timer.stop()
                         break
         self._started = found
         if not self._started:
+            module_logger.info("Program Complete")
             print("program complete")
         else:
             self.wait()
 
     def wait(self):
-        print(str(self._step) + " " + format(self._timer.get_elapsed_time(), '0.0f'))
+        print(f"_step[{self._step}] _timer[{self._timer.get_elapsed_time():0.1f}]")
         msg['current']['stepTime'] = int(self._timer.get_elapsed_time())
         msg['current']['elapsedTime'] = int(self.get_elapsed_time())
         timer = threading.Timer(6, self.run_step)

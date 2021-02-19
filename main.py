@@ -16,7 +16,7 @@ p = Program()
 t = Timer()
 
 # create logger with 'spam_application'
-logger = logging.getLogger('temperatureRegulator')
+logger = logging.getLogger('main')
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
 fh = logging.FileHandler('log.log')
@@ -50,7 +50,7 @@ def run_program(action):
 
 @app.route('/')
 def current_settings():
-    logger.debug("current_settings() msg[" + msg + "]")
+    logger.debug("current_settings() msg[" + json.dumps(msg, indent=2) + "]")
     return msg
 
 
