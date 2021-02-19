@@ -2,6 +2,8 @@ import logging
 import socket
 
 from flask import Flask, request, jsonify, send_from_directory, render_template
+
+from static import get_logging_level
 from timer import Timer
 from program import Program
 from settings import msg
@@ -20,7 +22,7 @@ logger = logging.getLogger('main')
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
 fh = logging.FileHandler('log.log')
-fh.setLevel(logging.DEBUG)
+fh.setLevel(get_logging_level())
 # create console handler with a higher log level
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
