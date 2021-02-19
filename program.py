@@ -1,6 +1,7 @@
 import threading
 import time
 
+from main import logger
 from timer import Timer
 from settings import msg
 
@@ -17,6 +18,7 @@ class Program(object):
         self._step = 0
 
     def is_running(self):
+        logger.debug("run_program(" + str(self._started) + ")")
         return self._started
 
     def run(self):
