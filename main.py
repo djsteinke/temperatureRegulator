@@ -126,14 +126,14 @@ def program(action):
                    data=action), 200
 
 
-@app.route('/led/<action>')
-def led(action):
-    global pin
+@app.route('/led/<pin_in>/<action>')
+def led(pin_in, action):
     global pin_state
+    GPIO.setup(pin, GPIO.OUT)
     if action == "on":
-        GPIO.setup(pin, GPIO.HIGH)
+        GPIO.output(pin, GPIO.high)
     else:
-        GPIO.setup(pin, GPIO.LOW)
+        GPIO.setup(pin_in, GPIO.LOW)
     pin_state = GPIO.input(pin)
     logger.debug(f"led({action}) state({pin_state})")
     return jsonify(message="Success",
