@@ -37,7 +37,7 @@ logger.addHandler(ch)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-pin = 4
+pin = 23
 pin_state = 0
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(pin, GPIO.LOW)
