@@ -131,7 +131,7 @@ def led(pin_in, action):
     global pin_state
     GPIO.setup(pin, GPIO.OUT)
     if action == "on":
-        GPIO.output(pin, GPIO.high)
+        GPIO.output(pin, GPIO.HIGH)
     else:
         GPIO.setup(pin_in, GPIO.LOW)
     pin_state = GPIO.input(pin)
