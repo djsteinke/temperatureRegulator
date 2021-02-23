@@ -24,7 +24,7 @@ class Program(object):
         return self._started
 
     def run(self):
-        module_logger.debug("run()")
+        module_logger.info("run() Program Started")
         print("Program.run()")
         self._step = 1
         self._started = True
@@ -64,6 +64,7 @@ class Program(object):
         timer.start()
 
     def stop(self):
+        module_logger.debug("stop()")
         self._started = False
 
     def get_elapsed_time(self):

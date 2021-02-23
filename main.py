@@ -1,5 +1,6 @@
 import logging
 import socket
+import RPi.GPIO as GPIO
 
 from flask import Flask, request, jsonify, send_from_directory, render_template
 
@@ -34,6 +35,13 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+pin = 16
+pin_state = 0
+GPIO.setup(pin, GPIO.OUT)
+GPIO.output(pin, GPIO.LOW)
+
 
 def run_program(action):
     global p
@@ -54,6 +62,20 @@ def run_program(action):
 def current_settings():
     logger.debug("current_settings() msg[" + json.dumps(msg, indent=2) + "]")
     return msg
+
+
+@app.route('/pi/<action>')
+def pi_action(action):
+    cmd = "sudo shutdown -"
+    if action == "r" or action == "h":
+        os.system(f"sudo shutdown -{action}")
+    else:
+        return jsonify(message="Error",
+                       statusCode=400,
+                       data="Invalid action."), 400
+    return jsonify(message="Success",
+                   statusCode=200,
+                   data=action), 200
 
 
 @app.route('/getTemp')
@@ -99,6 +121,21 @@ def timer(action):
 def program(action):
     logger.debug("program(" + action + ")")
     run_program(action)
+    return jsonify(message="Success",
+                   statusCode=200,
+                   data=action), 200
+
+
+@app.route('/led/<action>')
+def led(action):
+    global pin
+    global pin_state
+    if action == "on":
+        GPIO.setup(pin, GPIO.HIGH)
+    else:
+        GPIO.setup(pin, GPIO.LOW)
+    pin_state = GPIO.input(pin)
+    logger.debug(f"led({action}) state({pin_state})")
     return jsonify(message="Success",
                    statusCode=200,
                    data=action), 200
