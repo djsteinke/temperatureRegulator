@@ -133,7 +133,7 @@ def led(pin_in, action):
     if action == "on":
         GPIO.output(int(pin_in), GPIO.HIGH)
     else:
-        GPIO.setup(int(pin_in), GPIO.LOW)
+        GPIO.output(int(pin_in), GPIO.LOW)
     pin_state = GPIO.input(pin)
     logger.debug(f"led({action}) state({pin_state})")
     return jsonify(message="Success",
