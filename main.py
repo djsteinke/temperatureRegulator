@@ -96,9 +96,9 @@ def get_temp():
     time.sleep(0.5)
     data = bus.read_i2c_block_data(0x38, 0x00)
     temp = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
-    ctemp = ((temp*200)/1048576) - 50
-    tmp = ((data[1] << 16) | (data[2] << 8) | data[3] >> 4)
-    ctmp = int(tmp * 100 / 1048576)
+    ctemp = ((temp*200) / 1048576) - 50
+    tmp = ((data[1] << 16) | (data[2] << 8) | data[3]) >> 4
+    ctmp = tmp * 100 / 1048576
     return jsonify(message="Success",
                    statusCode=200,
                    temp=ctemp,
