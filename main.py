@@ -87,6 +87,7 @@ def pi_action(action):
 
 @app.route('/getTemp')
 def get_temp():
+    global data
     logger.debug("get_temp() temperature[" + str(msg['current']['temperature']) + "]")
     temp = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
     ctemp = ((temp*200)/1048576) - 50
