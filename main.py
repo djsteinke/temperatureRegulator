@@ -1,6 +1,7 @@
 import logging
 import socket
 import RPi.GPIO as GPIO
+import smbus
 
 from flask import Flask, request, jsonify, send_from_directory, render_template
 
@@ -42,6 +43,12 @@ pin_state = 0
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(pin, GPIO.LOW)
 
+bus = smbus.SMBus(0)
+config = [0x08, 0x00]
+bus.write_i2c_block_data(0x38, 0xE1, config)
+byt = bus.read_byte(0x38)
+data = bus.read_i2c_block_data(0x38, 0x00)
+
 
 def run_program(action):
     global p
@@ -81,7 +88,14 @@ def pi_action(action):
 @app.route('/getTemp')
 def get_temp():
     logger.debug("get_temp() temperature[" + str(msg['current']['temperature']) + "]")
-    return str(msg['current']['temperature'])
+    temp = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
+    ctemp = ((temp*200)/1048576) - 50
+    tmp = ((data[1] << 16) | (data[2] << 8) | data[3] >> 4)
+    ctmp = int(tmp * 100 / 1048576)
+    return jsonify(message="Success",
+                   statusCode=200,
+                   temp=ctemp,
+                   humidity=ctmp), 200
 
 
 @app.route('/setTemp/<t>')
