@@ -49,7 +49,7 @@ bus = smbus.SMBus(1)
 config = [0x08, 0x00]
 
 
-def run_program(acton):
+def run_program(action):
     global p
     logger.debug("run_program(" + action + ")")
     if action == "start":
