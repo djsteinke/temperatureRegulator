@@ -191,7 +191,7 @@ def get_c_from_f(f):
 
 
 def get_f_from_c(c):
-    return c/1.8 + 32
+    return c*1.8 + 32
 
 
 @app.route('/favicon.ico')
