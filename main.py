@@ -102,7 +102,7 @@ def get_temp():
     return jsonify(message="Success",
                    statusCode=200,
                    temp=ctemp,
-                   humidity=f'{ctmp: .0%}',
+                   humidity=f'{ctmp: .0}',
                    tempF=get_f_from_c(ctemp)), 200
 
 
