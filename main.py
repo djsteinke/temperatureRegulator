@@ -102,7 +102,8 @@ def get_temp():
     return jsonify(message="Success",
                    statusCode=200,
                    temp=ctemp,
-                   humidity=ctmp), 200
+                   humidity=ctmp,
+                   tempF=get_f_from_c(ctemp)), 200
 
 
 @app.route('/setTemp/<t>')
@@ -187,6 +188,10 @@ def get_c_from_f(f):
     c = f-32
     c = c/1.8
     return c
+
+
+def get_f_from_c(c):
+    return c/1.8 + 32
 
 
 @app.route('/favicon.ico')
