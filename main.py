@@ -1,5 +1,7 @@
 import logging
 import socket
+import time
+
 import RPi.GPIO as GPIO
 import smbus
 
@@ -45,9 +47,6 @@ GPIO.output(pin, GPIO.LOW)
 
 bus = smbus.SMBus(0)
 config = [0x08, 0x00]
-bus.write_i2c_block_data(0x38, 0xE1, config)
-byt = bus.read_byte(0x38)
-data = bus.read_i2c_block_data(0x38, 0x00)
 
 
 def run_program(action):
@@ -89,6 +88,13 @@ def pi_action(action):
 def get_temp():
     global data
     logger.debug("get_temp() temperature[" + str(msg['current']['temperature']) + "]")
+    bus.write_i2c_block_data(0x38, 0xE1, config)
+    byt = bus.read_byte(0x38)
+    print(byt & 0x68)
+    MeasureCmd = [0x33, 0x00]
+    bus.write_i2c_block_data(0x38, 0xAC, MeasureCmd)
+    time.sleep(0.5)
+    data = bus.read_i2c_block_data(0x38, 0x00)
     temp = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
     ctemp = ((temp*200)/1048576) - 50
     tmp = ((data[1] << 16) | (data[2] << 8) | data[3] >> 4)
