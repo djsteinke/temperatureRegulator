@@ -45,11 +45,11 @@ pin_state = 0
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(pin, GPIO.LOW)
 
-bus = smbus.SMBus(0)
+bus = smbus.SMBus(1)
 config = [0x08, 0x00]
 
 
-def run_program(action):
+def run_program(acton):
     global p
     logger.debug("run_program(" + action + ")")
     if action == "start":
