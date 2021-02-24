@@ -99,12 +99,11 @@ def get_temp():
     ctemp = ((temp*200) / 1048576) - 50
     tmp = ((data[1] << 16) | (data[2] << 8) | data[3]) >> 4
     ctmp = tmp * 100 / 1048576
-    ret = json.loads(jsonify(message="Success",
-                             statusCode=200,
-                             temp=ctemp,
-                             humidity=ctmp,
-                             tempF=get_f_from_c(ctemp)))
-    return json.dumps(ret), 200
+    return jsonify(message="Success",
+                   statusCode=200,
+                   temp=ctemp,
+                   humidity=ctmp,
+                   tempF=get_f_from_c(ctemp)), 200
 
 
 @app.route('/setTemp/<t>')
