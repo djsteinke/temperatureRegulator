@@ -1,13 +1,11 @@
 import logging
 import socket
-import time
 
 import RPi.GPIO as GPIO
-import smbus
 
 from flask import Flask, request, jsonify, send_from_directory, render_template
 
-from static import get_logging_level
+from static import get_logging_level, get_temperature
 from timer import Timer
 from program import Program
 from settings import msg
@@ -44,9 +42,6 @@ pin = 23
 pin_state = 0
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(pin, GPIO.LOW)
-
-bus = smbus.SMBus(1)
-config = [0x08, 0x00]
 
 
 def run_program(action):
@@ -87,21 +82,7 @@ def pi_action(action):
 @app.route('/getTemp')
 def get_temp():
     logger.debug("get_temp() temperature[" + str(msg['current']['temperature']) + "]")
-    bus.write_i2c_block_data(0x38, 0xE1, config)
-    byt = bus.read_byte(0x38)
-    print(byt & 0x68)
-    measure_cmd = [0x33, 0x00]
-    bus.write_i2c_block_data(0x38, 0xAC, measure_cmd)
-    time.sleep(0.5)
-    data = bus.read_i2c_block_data(0x38, 0x00)
-    temp_raw = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
-    temp_c = ((temp_raw*200) / 1048576) - 50
-    humid_raw = ((data[1] << 16) | (data[2] << 8) | data[3]) >> 4
-    humid = humid_raw * 100 / 1048576
-    msg["current"]["temperature"] = temp_c
-    msg["current"]["humidity"] = humid
-    # response_json = {"message": "success", "statusCode": 200, "temp": temp_c,
-    # "tempF": get_f_from_c(temp_c), "humidity": humid}
+    get_temperature()
     return json.dumps(msg), 200
 
 

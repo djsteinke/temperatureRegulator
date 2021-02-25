@@ -4,6 +4,7 @@ import time
 
 from timer import Timer
 from settings import msg
+from static import get_temperature
 
 module_logger = logging.getLogger('main.program')
 
@@ -18,6 +19,7 @@ class Program(object):
         self._timer = Timer()
         self._started = False
         self._step = 0
+        self._step_temp_reached = False
 
     def is_running(self):
         module_logger.debug("run_program(" + str(self._started) + ")")
@@ -29,6 +31,7 @@ class Program(object):
         self._step = 1
         self._started = True
         self._start_time = time.perf_counter()
+
         msg["current"]["step"] = self._step
         msg["current"]["started"] = self._started
         self.run_step()
@@ -44,12 +47,14 @@ class Program(object):
                         module_logger.debug("_timer.start()")
                         msg["current"]["step"] = self._step
                         msg["current"]["stepTemperature"] = obj["temperature"]
-                        self._timer.start()
+                        if msg["current"]["temperature"] > msg["current"]["stepTemperature"]:
+                            self._timer.start()
                         # TODO set temp
                     if self._timer.get_elapsed_time() / 60 > obj["time"]:
                         self._step += 1
                         module_logger.debug(f"_step({self._step})")
                         msg["current"]["step"] = self._step
+                        self._step_temp_reached = False
                         self._timer.stop()
                         break
         self._started = found
@@ -64,6 +69,7 @@ class Program(object):
         print(f"_step[{self._step}] _timer[{self._timer.get_elapsed_time():0.1f}]")
         msg["current"]["stepTime"] = int(self._timer.get_elapsed_time())
         msg["current"]["elapsedTime"] = int(self.get_elapsed_time())
+        get_temperature()
         timer = threading.Timer(6, self.run_step)
         timer.start()
 
