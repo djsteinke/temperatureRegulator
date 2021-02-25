@@ -208,4 +208,5 @@ if __name__ == '__main__':
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
-    app.run(ssl_context='adhoc', host=host_name, port=1983)
+    # app.run(ssl_context='adhoc', host=host_name, port=1983)
+    app.run(host=host_name, port=1983)
