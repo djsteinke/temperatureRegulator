@@ -12,19 +12,19 @@ msg = {
     "program": [
         {
             "step": 1,
-            "temperature": 150,
+            "temperature": 35,
             "time": 1,
             "rate": 0
         },
         {
             "step": 3,
-            "temperature": 160,
+            "temperature": 0,
             "time": 1,
             "rate": 0
         },
         {
             "step": 2,
-            "temperature": 160,
+            "temperature": 55,
             "time": 1,
             "rate": 0
         }
