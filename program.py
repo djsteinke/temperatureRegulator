@@ -54,9 +54,9 @@ class Program(object):
                             self._timer.start()
 
                     if msg["current"]["temperature"] > msg["current"]["stepTemperature"]:
-                        lamp.on()
-                    else:
                         lamp.off()
+                    else:
+                        lamp.on()
 
                     if self._timer.get_elapsed_time() / 60 > obj["time"]:
                         self._step += 1
@@ -69,6 +69,7 @@ class Program(object):
         if not self._started:
             module_logger.info("Program Complete")
             msg["current"]["started"] = self._started
+            lamp.off()
             print("program complete")
         else:
             self.wait()
