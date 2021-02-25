@@ -3,9 +3,11 @@ msg = {
     "current": {
         "humidity": 20,
         "temperature": 75.0,
+        "stepTemperature": 0.0,
         "step": 0,
         "stepTime": 0.0,
-        "elapsedTime": 0.0
+        "elapsedTime": 0.0,
+        "started": False
     },
     "program": [
         {

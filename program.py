@@ -29,37 +29,41 @@ class Program(object):
         self._step = 1
         self._started = True
         self._start_time = time.perf_counter()
-        msg['current']['step'] = self._step
+        msg["current"]["step"] = self._step
+        msg["current"]["started"] = self._started
         self.run_step()
 
     def run_step(self):
         module_logger.debug(f"run_step({self._step})")
         found = False
         if self._started:
-            for obj in msg['program']:
-                if obj['step'] == self._step:
+            for obj in msg["program"]:
+                if obj["step"] == self._step:
                     found = True
                     if not self._timer.is_running():
                         module_logger.debug("_timer.start()")
+                        msg["current"]["step"] = self._step
+                        msg["current"]["stepTemperature"] = obj["temperature"]
                         self._timer.start()
                         # TODO set temp
-                    if self._timer.get_elapsed_time() / 60 > obj['time']:
+                    if self._timer.get_elapsed_time() / 60 > obj["time"]:
                         self._step += 1
                         module_logger.debug(f"_step({self._step})")
-                        msg['current']['step'] = self._step
+                        msg["current"]["step"] = self._step
                         self._timer.stop()
                         break
         self._started = found
         if not self._started:
             module_logger.info("Program Complete")
+            msg["current"]["started"] = self._started
             print("program complete")
         else:
             self.wait()
 
     def wait(self):
         print(f"_step[{self._step}] _timer[{self._timer.get_elapsed_time():0.1f}]")
-        msg['current']['stepTime'] = int(self._timer.get_elapsed_time())
-        msg['current']['elapsedTime'] = int(self.get_elapsed_time())
+        msg["current"]["stepTime"] = int(self._timer.get_elapsed_time())
+        msg["current"]["elapsedTime"] = int(self.get_elapsed_time())
         timer = threading.Timer(6, self.run_step)
         timer.start()
 

@@ -107,7 +107,7 @@ def get_temp():
 
 @app.route('/setTemp/<t>')
 def set_temp(temp):
-    msg["setTemp"] = int(temp)
+    msg["current"]["stepTemperature"] = int(temp)
     logger.debug("set_temp() temperature[" + temp + "]")
     return jsonify(message="Success",
                    statusCode=200,
