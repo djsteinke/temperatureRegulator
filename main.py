@@ -86,22 +86,24 @@ def pi_action(action):
 
 @app.route('/getTemp')
 def get_temp():
-    global data
+    global msg
     logger.debug("get_temp() temperature[" + str(msg['current']['temperature']) + "]")
     bus.write_i2c_block_data(0x38, 0xE1, config)
     byt = bus.read_byte(0x38)
     print(byt & 0x68)
-    MeasureCmd = [0x33, 0x00]
-    bus.write_i2c_block_data(0x38, 0xAC, MeasureCmd)
+    measure_cmd = [0x33, 0x00]
+    bus.write_i2c_block_data(0x38, 0xAC, measure_cmd)
     time.sleep(0.5)
     data = bus.read_i2c_block_data(0x38, 0x00)
-    temp = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
-    ctemp = ((temp*200) / 1048576) - 50
-    tmp = ((data[1] << 16) | (data[2] << 8) | data[3]) >> 4
-    ctmp = tmp * 100 / 1048576
-    response_json = {"message": "success", "statusCode": 200, "temp": ctemp, "tempF": get_f_from_c(ctemp), "humidity": ctmp}
-
-    return json.dumps(response_json), 200
+    temp_raw = ((data[3] & 0x0F) << 16) | (data[4] << 8) | data[5]
+    temp_c = ((temp_raw*200) / 1048576) - 50
+    humid_raw = ((data[1] << 16) | (data[2] << 8) | data[3]) >> 4
+    humid = humid_raw * 100 / 1048576
+    msg["current"]["temperature"] = temp_c
+    msg["current"]["humidity"] = humid
+    # response_json = {"message": "success", "statusCode": 200, "temp": temp_c,
+    # "tempF": get_f_from_c(temp_c), "humidity": humid}
+    return json.dumps(msg), 200
 
 
 @app.route('/setTemp/<t>')
