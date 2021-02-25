@@ -5,8 +5,11 @@ import time
 from timer import Timer
 from settings import msg
 from static import get_temperature
+from relay import Relay
 
 module_logger = logging.getLogger('main.program')
+lamp = Relay(23)
+vacuum = Relay(24)
 
 
 class ProgramError(Exception):
@@ -49,7 +52,12 @@ class Program(object):
                         msg["current"]["stepTemperature"] = obj["temperature"]
                         if msg["current"]["temperature"] > msg["current"]["stepTemperature"]:
                             self._timer.start()
-                        # TODO set temp
+
+                    if msg["current"]["temperature"] > msg["current"]["stepTemperature"]:
+                        lamp.on()
+                    else:
+                        lamp.off()
+
                     if self._timer.get_elapsed_time() / 60 > obj["time"]:
                         self._step += 1
                         module_logger.debug(f"_step({self._step})")
