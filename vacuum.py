@@ -23,6 +23,7 @@ class Vacuum(object):
         self._started = False
 
     def wait(self):
+        msg["current"]["vacuumTimeRemaining"] = self.get_time_remaining()
         if time.perf_counter()-self._start_time > self._run_time:
             self.stop()
         else:
@@ -34,3 +35,9 @@ class Vacuum(object):
 
     def is_on(self):
         return self._vacuum.is_on()
+
+    def get_time_remaining(self):
+        if self._started:
+            return self._run_time - (time.perf_counter() - self._start_time)
+        else:
+            0
