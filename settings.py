@@ -1,3 +1,4 @@
+import json
 
 msg = {
     "current": {
@@ -35,6 +36,22 @@ msg = {
         }
     ]
 }
+
+
+def save():
+    f = open("msg.json", "w")
+    f.write(json.dumps(msg))
+    f.close()
+
+
+def load():
+    global msg
+    try:
+        f = open("msg.json", "r")
+        msg = json.loads(f.read())
+        f.close()
+    except FileNotFoundError:
+        save()
 
 
 class Settings(object):

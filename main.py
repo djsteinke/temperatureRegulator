@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify, send_from_directory, render_template
 from static import get_logging_level, get_temperature
 from timer import Timer
 from program import Program, heat
-from settings import msg
+from settings import msg, save, load
 from vacuum import Vacuum
 from relay import Relay
 import json
@@ -100,6 +100,7 @@ def upload():
     print(y)
     logger.debug("upload() program[" + y + "]")
     msg['program'] = x
+    save()
     return jsonify(message="Success",
                    statusCode=200,
                    data=y), 200
@@ -135,21 +136,6 @@ def vacuum(action):
 def program(action):
     logger.debug("program(" + action + ")")
     run_program(action)
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=action), 200
-
-
-@app.route('/led/<pin_in>/<action>')
-def led(pin_in, action):
-    global pin_state
-    GPIO.setup(int(pin_in), GPIO.OUT)
-    if action == "on":
-        GPIO.output(int(pin_in), GPIO.HIGH)
-    else:
-        GPIO.output(int(pin_in), GPIO.LOW)
-    # pin_state = GPIO.input(pin)
-    logger.debug(f"led({action}) state({pin_state})")
     return jsonify(message="Success",
                    statusCode=200,
                    data=action), 200
@@ -200,5 +186,6 @@ if __name__ == '__main__':
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
+    load()
     # app.run(ssl_context='adhoc', host=host_name, port=1983)
     app.run(host=host_name, port=1983)
