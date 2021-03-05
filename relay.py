@@ -20,3 +20,6 @@ class Relay(object):
         # TODO turn off
         self._on = False
         GPIO.output(self._pin, GPIO.LOW)
+
+    def is_on(self):
+        return self._on

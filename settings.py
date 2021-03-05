@@ -7,7 +7,8 @@ msg = {
         "step": 0,
         "stepTime": 0.0,
         "elapsedTime": 0.0,
-        "started": False
+        "heat": False,
+        "vacuum": False
     },
     "program": [
         {

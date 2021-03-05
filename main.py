@@ -7,8 +7,10 @@ from flask import Flask, request, jsonify, send_from_directory, render_template
 
 from static import get_logging_level, get_temperature
 from timer import Timer
-from program import Program
+from program import Program, heat
 from settings import msg
+from vacuum import Vacuum
+from relay import Relay
 import json
 import os
 
@@ -36,12 +38,7 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-pin = 23
-pin_state = 0
-GPIO.setup(pin, GPIO.OUT)
-GPIO.output(pin, GPIO.LOW)
+vacuum = Vacuum()
 
 
 def run_program(action):
@@ -114,6 +111,20 @@ def timer(action):
         t.start()
     elif action == "stop":
         t.stop()
+    return jsonify(message="Success",
+                   statusCode=200,
+                   data=action), 200
+
+
+@app.route('/vacuum/<action>')
+def vacuum(action):
+    logger.debug("vacuum(" + action + ")")
+    if action == "start":
+        vacuum.start()
+        logger.debug("vacuum.start()")
+    elif action == "stop":
+        vacuum.stop()
+        logger.debug("vacuum.stop()")
     return jsonify(message="Success",
                    statusCode=200,
                    data=action), 200

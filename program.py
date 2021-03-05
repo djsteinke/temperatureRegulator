@@ -8,8 +8,7 @@ from static import get_temperature
 from relay import Relay
 
 module_logger = logging.getLogger('main.program')
-lamp = Relay(23)
-vacuum = Relay(24)
+heat = Relay(23)
 
 
 class ProgramError(Exception):
@@ -54,9 +53,10 @@ class Program(object):
                             self._timer.start()
 
                     if msg["current"]["temperature"] > msg["current"]["stepTemperature"]:
-                        lamp.off()
+                        heat.off()
                     else:
-                        lamp.on()
+                        heat.on()
+                    msg["current"]["heat"] = heat.is_on()
 
                     if self._timer.get_elapsed_time() / 60 > obj["time"]:
                         self._step += 1
@@ -69,7 +69,7 @@ class Program(object):
         if not self._started:
             module_logger.info("Program Complete")
             msg["current"]["started"] = self._started
-            lamp.off()
+            heat.off()
             print("program complete")
         else:
             self.wait()
@@ -79,7 +79,7 @@ class Program(object):
         msg["current"]["stepTime"] = int(self._timer.get_elapsed_time())
         msg["current"]["elapsedTime"] = int(self.get_elapsed_time())
         get_temperature()
-        timer = threading.Timer(6, self.run_step)
+        timer = threading.Timer(5, self.run_step)
         timer.start()
 
     def stop(self):
