@@ -12,6 +12,9 @@ msg = {
         "vacuum": False,
         "vacuumTimeRemaining": 0
     },
+    "vacuum": {
+        "time": 3600
+    },
     "program": [
         {
             "step": 1,

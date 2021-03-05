@@ -12,7 +12,7 @@ class Vacuum(object):
         self._start_time = None
         self._vacuum = Relay(24)
         self._started = False
-        self._run_time = 3600
+        self._run_time = msg["vacuum"]["time"]
 
     def start(self):
         self._vacuum.on()
@@ -26,6 +26,7 @@ class Vacuum(object):
         self._vacuum.off()
         msg["current"]["vacuum"] = self._vacuum.is_on()
         self._started = False
+        self._run_time = msg["vacuum"]["time"]
 
     def wait(self):
         msg["current"]["vacuumTimeRemaining"] = int(self.get_time_remaining())
