@@ -59,7 +59,7 @@ def run_program(action):
 @app.route('/')
 def current_settings():
     logger.debug("current_settings() msg[" + json.dumps(msg, indent=2) + "]")
-    return msg
+    return json.dumps(msg), 200
 
 
 @app.route('/pi/<action>')
