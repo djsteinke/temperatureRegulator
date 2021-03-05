@@ -1,7 +1,10 @@
+import logging
 import threading
 import time
 from relay import Relay
 from settings import msg
+
+module_logger = logging.getLogger('main.program')
 
 
 class Vacuum(object):
@@ -37,6 +40,7 @@ class Vacuum(object):
         return self._vacuum.is_on()
 
     def get_time_remaining(self):
+        module_logger.debug(f"{self._run_time - (time.perf_counter() - self._start_time)}")
         if self._started:
             return self._run_time - (time.perf_counter() - self._start_time)
         else:
