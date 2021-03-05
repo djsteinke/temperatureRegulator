@@ -19,6 +19,8 @@ class Vacuum(object):
         msg["current"]["vacuum"] = self._vacuum.is_on()
         self._started = True
         self._start_time = time.perf_counter()
+        timer = threading.Timer(5, self.wait)
+        timer.start()
 
     def stop(self):
         self._vacuum.off()
