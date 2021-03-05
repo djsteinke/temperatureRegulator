@@ -29,5 +29,8 @@ class Vacuum(object):
             timer = threading.Timer(5, self.wait)
             timer.start()
 
+    def is_started(self):
+        return self._started
+
     def is_on(self):
         return self._vacuum.is_on()

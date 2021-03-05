@@ -38,7 +38,7 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-vacuum = Vacuum()
+v = Vacuum()
 
 
 def run_program(action):
@@ -119,11 +119,11 @@ def timer(action):
 @app.route('/vacuum/<action>')
 def vacuum(action):
     logger.debug("vacuum(" + action + ")")
-    if action == "start":
-        vacuum.start()
+    if action == "start" and not v.is_started():
+        v.start()
         logger.debug("vacuum.start()")
-    elif action == "stop":
-        vacuum.stop()
+    elif action == "stop" and v.is_started():
+        v.stop()
         logger.debug("vacuum.stop()")
     return jsonify(message="Success",
                    statusCode=200,
