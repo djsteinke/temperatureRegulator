@@ -59,6 +59,7 @@ def run_program(action):
 @app.route('/')
 def current_settings():
     logger.debug("current_settings() msg[" + json.dumps(msg, indent=2) + "]")
+    get_temperature()
     return json.dumps(msg), 200
 
 
