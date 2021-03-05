@@ -1,7 +1,7 @@
 
 msg = {
     "current": {
-        "humidity": 20,
+        "humidity": 20.0,
         "temperature": 75.0,
         "stepTemperature": 0.0,
         "step": 0,
