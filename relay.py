@@ -1,3 +1,6 @@
+import threading
+import time
+
 import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BCM)
@@ -8,18 +11,81 @@ class Relay(object):
     def __init__(self, pin):
         self._on = False
         self._pin = pin
-        GPIO.setup(self._pin, GPIO.OUT)
-        GPIO.output(self._pin, GPIO.LOW)
+        self._run_time = 0
+        self._wait = 0
+        self._callback = None
+        self._gpio_on = GPIO.HIGH
+        self._gpio_off = GPIO.LOW
+        self._start_time = 0
+        self.setup_pin()
 
     def on(self):
-        # TODO turn on
-        self._on = True
-        GPIO.output(self._pin, GPIO.HIGH)
+        if self._run_time > 0 and self._pin > 0:
+            self._on = True
+            self._start_time = time.perf_counter()
+            GPIO.output(self._pin, self._gpio_on)
+            timer = threading.Timer(self._run_time, self.off)
+            timer.start()
+
+    def force_off(self):
+        self._wait = 0
+        self.off()
 
     def off(self):
-        # TODO turn off
+        GPIO.output(self._pin, self._gpio_off)
         self._on = False
-        GPIO.output(self._pin, GPIO.LOW)
+        if self._callback is not None:
+            timer = threading.Timer(self._wait, self._callback)
+            timer.start()
 
+    def on_time(self):
+        if self._start_time == 0:
+            return 0
+        else:
+            return int(time.perf_counter() - self._start_time)
+
+    def setup_pin(self):
+        if self._pin > 0:
+            GPIO.setup(self._pin, GPIO.OUT)
+            if GPIO.input(self._pin) > 0:
+                self._gpio_on = GPIO.LOW
+                self._gpio_off = GPIO.HIGH
+            GPIO.output(self._pin, self._gpio_off)
+
+    @property
+    def pin(self):
+        return self._pin
+
+    @property
     def is_on(self):
         return self._on
+
+    @property
+    def run_time(self):
+        return self._run_time
+
+    @property
+    def wait(self):
+        return self._wait
+
+    @property
+    def callback(self):
+        return self._callback
+
+    @callback.setter
+    def callback(self, value):
+        self._callback = value
+
+    @pin.setter
+    def pin(self, value):
+        if (self._pin != value) and not self._on:
+            self._pin = value
+            self.setup_pin()
+
+    @run_time.setter
+    def run_time(self, value):
+        self._run_time = value
+
+    @wait.setter
+    def wait(self, value):
+        self._wait = value

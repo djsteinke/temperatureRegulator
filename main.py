@@ -1,25 +1,16 @@
 import logging
 import socket
+import re
 
-import RPi.GPIO as GPIO
+from flask import Flask, request, send_from_directory
 
-from flask import Flask, request, jsonify, send_from_directory, render_template
-
-from static import get_logging_level, get_temperature
-from timer import Timer
-from program import Program, heat
+from static import get_logging_level
 from settings import msg, save, load
-from vacuum import Vacuum
-from relay import Relay
+from hot_box import HotBox
 import json
 import os
 
 app = Flask(__name__)
-currentTemp = 0
-current_set_temp = 0
-
-p = Program()
-t = Timer()
 
 # create logger with 'spam_application'
 logger = logging.getLogger('main')
@@ -38,59 +29,33 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-v = Vacuum()
+hot_box = HotBox()
 
 
-def run_program(action):
-    global p
-    logger.debug("run_program(" + action + ")")
-    if action == "start":
-        if not p.is_running():
-            print("Program started")
-            logger.debug("run_program() Program Started")
-            p.run()
-    elif action == "stop":
-        if p.is_running():
-            print("Program stopped")
-            logger.debug("run_program() Program Stopped")
-            p.stop()
-
-
-@app.route('/')
-def current_settings():
-    logger.debug("current_settings() msg[" + json.dumps(msg, indent=2) + "]")
-    get_temperature()
-    return json.dumps(msg), 200
+@app.route('/get/<option>')
+def get(option):
+    if option == "status":
+        ret = get_response("status")
+        s_str = json.dumps(hot_box.status.__dict__)
+        s_str = re.sub("\"_", "\"", s_str)
+        print(s_str)
+        s_j = json.loads(s_str)
+        ret['status'] = s_j
+        return ret, 200
 
 
 @app.route('/pi/<action>')
 def pi_action(action):
     cmd = "sudo shutdown -"
+    ret = get_response("pi")
     if action == "r" or action == "h":
-        os.system(f"sudo shutdown -{action}")
+        ret['value'] = action
+        os.system(f"{cmd} {action}")
     else:
-        return jsonify(message="Error",
-                       statusCode=400,
-                       data="Invalid action."), 400
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=action), 200
-
-
-@app.route('/getTemp')
-def get_temp():
-    logger.debug("get_temp() temperature[" + str(msg['current']['temperature']) + "]")
-    get_temperature()
-    return json.dumps(msg), 200
-
-
-@app.route('/setTemp/<t>')
-def set_temp(temp):
-    msg["current"]["stepTemperature"] = int(temp)
-    logger.debug("set_temp() temperature[" + temp + "]")
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=int(temp)), 200
+        ret['code'] = 400
+        ret['value'] = action
+        ret['error'] = "Invalid action."
+    return ret, 200
 
 
 @app.route('/upload', methods=['POST'])
@@ -101,65 +66,33 @@ def upload():
     logger.debug("upload() program[" + y + "]")
     msg['program'] = x
     save()
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=y), 200
+    ret = get_response('upload')
+    return ret, 200
 
 
-@app.route('/timer/<action>')
-def timer(action):
-    logger.debug("timer(" + action + ")")
-    if action == "start":
-        t.start()
-    elif action == "stop":
-        t.stop()
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=action), 200
+@app.route('/run/<t>/<va>', defaults={'vb': "0"})
+@app.route('/run/<t>/<va>/<vb>')
+def run(t, va, vb):
+    ret = get_response("run")
+    ret['value'] = t
+    if t == "program":
+        hot_box.program(msg['program'])
+        hot_box.start_program(va)
+    elif t == "heat":
+        x = int(vb)*60
+        hot_box.heat_on(va, x)
+    elif t == "vacuum":
+        x = int(va)*60
+        hot_box.vacuum_on(x)
+    return ret, 200
 
 
-@app.route('/vacuum/<action>')
-def vacuum(action):
-    logger.debug("vacuum(" + action + ")")
-    if action == "start" and not v.is_started():
-        v.start()
-        logger.debug("vacuum.start()")
-    elif action == "stop" and v.is_started():
-        v.stop()
-        logger.debug("vacuum.stop()")
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=action), 200
-
-
-@app.route('/program/<action>')
-def program(action):
-    logger.debug("program(" + action + ")")
-    run_program(action)
-    return jsonify(message="Success",
-                   statusCode=200,
-                   data=action), 200
-
-
-@app.route('/name/<name>')
-def fun(name):
-    logger.debug("fun(" + name + ")")
-    return '''
-
-<html>    
-    <head>
-    <style>
-    body{
-        font-family:"Roboto";
-        text-align:center;
-    }
-    </style>
-        <title>''' + name + '''</title>
-    </head>
-    <body>
-        <h1>Hello, ''' + name + '''!</h1>
-    </body>
-</html>'''
+def get_response(response_type):
+    return {"code": 200,
+            "type": response_type,
+            "value": None,
+            "error": None,
+            "status": {}}
 
 
 def get_c_from_f(f):
@@ -174,7 +107,8 @@ def get_f_from_c(c):
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 if __name__ == '__main__':
@@ -187,5 +121,4 @@ if __name__ == '__main__':
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
     load()
-    # app.run(ssl_context='adhoc', host=host_name, port=1983)
     app.run(host=host_name, port=1983)
