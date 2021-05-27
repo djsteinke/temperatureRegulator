@@ -75,12 +75,12 @@ def run():
     tp = request.args.get('type', default='', type=str)
     temp = request.args.get('temp', default=0.0, type=float)
     time = request.args.get('time', default=0, type=int)
-    prog = request.args.get('filter', default='', type=str)
+    program = request.args.get('program', default='', type=str)
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
         hot_box.program(msg['program'])
-        hot_box.start_program(prog)
+        hot_box.start_program(program)
     elif tp == "heat":
         if hot_box.status.heat:
             hot_box.heat_off()
