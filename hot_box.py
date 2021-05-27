@@ -16,6 +16,7 @@ class HotBox(object):
         self._hold_timer = None
         self._step_timer = None
         self._status = Status()
+        self._history = []
         self._p_start_time = None
         self._s_start_time = None
         self._heat = Relay(heat_pin)
