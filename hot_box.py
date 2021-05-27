@@ -37,7 +37,8 @@ class HotBox(object):
         self._status.step_time = 0
         self._status.hold_temperature = 0
         self._status.heat = self._heat.is_on
-        self._hold_timer.stop()
+        if self._hold_timer is not None:
+            self._hold_timer.cancel()
 
     def vacuum_on(self, run_time):
         if run_time is None:
@@ -55,11 +56,11 @@ class HotBox(object):
         self._status.step = -1
         self._status.hold_temperature = 0
         self._status.running = False
-        if self._hold_timer is not None and self._hold_timer.is_running():
-            self._hold_timer.stop()
+        if self._hold_timer is not None:
+            self._hold_timer.cancel()
             self._hold_timer = None
-        if self._step_timer is not None and self._step_timer().is_running():
-            self._step_timer.stop()
+        if self._step_timer is not None:
+            self._step_timer.cancel()
             self._step_timer = None
         if self._heat.is_on:
             self._heat.force_off()
