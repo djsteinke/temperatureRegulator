@@ -1,5 +1,4 @@
 
-
 class Status(object):
     def __init__(self):
         self._humidity = 0.0
@@ -13,6 +12,14 @@ class Status(object):
         self._vacuum_on = False
         self._running = False
         self._vacuum_time_remaining = 0
+        self._history = []
+
+    def add_history(self, val):
+        self._history.append(val)
+
+    @property
+    def history(self):
+        return self._history
 
     @property
     def humidity(self):
@@ -101,3 +108,7 @@ class Status(object):
     @running.setter
     def running(self, value):
         self._running = value
+
+    @history.setter
+    def history(self, value):
+        self._history = value

@@ -6,6 +6,7 @@ from static import get_temp
 from relay import Relay
 from properties import heat_pin, vacuum_pin
 from status import Status
+from history import History
 
 module_logger = logging.getLogger('main.hot_box')
 
@@ -29,11 +30,15 @@ class HotBox(object):
             run_time = 3600
         self._status.step_time = run_time
         self._heat.run_time = run_time
+        self._heat.callback = self.heat_off
         self._heat.on()
         self.hold_temp()
 
-    def heat_off(self):
+    def heat_cancel(self):
+        self._heat.wait = 0
         self._heat.off()
+
+    def heat_off(self):
         self._heat.run_time = 0
         self._status.step_time = 0
         self._status.hold_temperature = 0
@@ -45,10 +50,14 @@ class HotBox(object):
         if run_time is None:
             run_time = 3600
         self._vacuum.run_time = run_time
+        self._callback = self.vacuum_off
         self._vacuum.on()
 
-    def vacuum_off(self):
+    def vacuum_cancel(self):
+        self._vacuum.wait = 0
         self._vacuum.off()
+
+    def vacuum_off(self):
         self._vacuum.run_time = 0
         self._status.vacuum_time_remaining = 0
         self._status.vacuum = self._vacuum.is_on
@@ -129,6 +138,21 @@ class HotBox(object):
             return 0
         else:
             return int(time.perf_counter() - self._p_start_time)
+
+    def record(self):
+        if self._status.heat or self._status.vacuum or self._status.running:
+            history = History()
+            history.vacuum = self._status.vacuum
+            history.temp = self._status.temperature
+            if self._status.elapsed_step_time > 0:
+                history.time = self._status.elapsed_step_time
+            if self._status.elapsed_program_time > 0:
+                history.time = self._status.elapsed_program_time
+            self._status.add_history(history)
+            timer = threading.Timer(10, self.record)
+            timer.start()
+        else:
+            self._status.history = []
 
     @property
     def status(self):
