@@ -22,6 +22,7 @@ class HotBox(object):
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
         self._program = None
+        self._recording = False
 
     def heat_on(self, temp, run_time):
         self._s_start_time = time.perf_counter()
@@ -32,6 +33,8 @@ class HotBox(object):
         self._heat.run_time = run_time
         self._heat.callback = self.heat_off
         self._heat.on()
+        if not self._recording:
+            self.record()
         self.hold_temp()
 
     def heat_cancel(self):
@@ -53,6 +56,8 @@ class HotBox(object):
         self._vacuum.run_time = run_time
         self._callback = self.vacuum_off
         self._vacuum.on()
+        if not self._recording:
+            self.record()
 
     def vacuum_cancel(self):
         self._vacuum.wait = 0
@@ -88,6 +93,8 @@ class HotBox(object):
         self._p_start_time = time.perf_counter()
         self._status.running = True
         self.run_step()
+        if not self._recording:
+            self.record()
         module_logger.info(f"Program {name} Started")
 
     def run_step(self):
@@ -142,6 +149,7 @@ class HotBox(object):
 
     def record(self):
         if self._status.heat or self._status.vacuum or self._status.running:
+            self._recording = True
             history = History()
             history.vacuum = self._status.vacuum
             history.temp = self._status.temperature
@@ -153,6 +161,7 @@ class HotBox(object):
             timer = threading.Timer(10, self.record)
             timer.start()
         else:
+            self._recording = False
             self._status.history = []
 
     @property
