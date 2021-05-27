@@ -23,23 +23,37 @@ class HotBox(object):
         self._program = None
 
     def heat_on(self, temp, run_time):
-        self._status.hold_temperature(temp)
+        self._status.hold_temperature = temp
         if run_time is None:
             run_time = 3600
-        self._status.step_time(run_time)
-        self._heat.run_time(run_time)
+        self._status.step_time = run_time
+        self._heat.run_time = run_time
         self._heat.on()
         self.hold_temp()
+
+    def heat_off(self):
+        self._heat.off()
+        self._heat.run_time = 0
+        self._status.step_time = 0
+        self._status.hold_temperature = 0
+        self._status.heat = self._heat.is_on
+        self._hold_timer.stop()
 
     def vacuum_on(self, run_time):
         if run_time is None:
             run_time = 3600
-        self._vacuum.run_time(run_time)
+        self._vacuum.run_time = run_time
         self._vacuum.on()
+
+    def vacuum_off(self):
+        self._vacuum.off()
+        self._vacuum.run_time = 0
+        self._status.vacuum_time_remaining = 0
+        self._status.vacuum = self._vacuum.is_on
 
     def end_program(self):
         self._status.step = -1
-        self._status.set_temperature = -1
+        self._status.hold_temperature = 0
         self._status.running = False
         if self._hold_timer is not None and self._hold_timer.is_running():
             self._hold_timer.stop()
@@ -51,8 +65,8 @@ class HotBox(object):
             self._heat.force_off()
         if self._vacuum.is_on:
             self._vacuum.force_off()
-        self._status.heat(self._heat.is_on)
-        self._status.vacuum(self._vacuum.is_on)
+        self._status.heat = self._heat.is_on
+        self._status.vacuum = self._vacuum.is_on
         module_logger.info(f"Program Ended")
         if self._callback is not None:
             self._callback()
@@ -87,18 +101,18 @@ class HotBox(object):
 
     def hold_temp(self):
         t = get_temp()
-        self._status.temperature(t[0])
-        self._status.humidity(int(t[1]))
-        self._status.elapsed_step_time(self.time_in_step())
-        self._status.elapsed_program_time(self.time_in_program())
+        self._status.temperature = t[0]
+        self._status.humidity = t[1]
+        self._status.elapsed_step_time = self.time_in_step()
+        self._status.elapsed_program_time = self.time_in_program()
         if self._vacuum.is_on:
-            self._status.vacuum_time_remaining(self._vacuum.run_time-self._vacuum.on_time())
+            self._status.vacuum_time_remaining = self._vacuum.run_time-self._vacuum.on_time()
         if self._status.hold_temperature > 0:
             if self._status.temperature > self._status.hold_temperature:
                 self._heat.off()
             else:
                 self._heat.on()
-        self._status.heat(self._heat.is_on())
+        self._status.heat = self._heat.is_on
         self._hold_timer = threading.Timer(10, self.hold_temp)
         self._hold_timer.start()
 
@@ -120,11 +134,8 @@ class HotBox(object):
             return self._status
         else:
             r = get_temp()
-            print(r)
-            t = r[0]
-            h = r[1]
-            self._status.temperature = t
-            self._status.humidity = h
+            self._status.temperature = r[0]
+            self._status.humidity = r[1]
             return self._status
 
     @property

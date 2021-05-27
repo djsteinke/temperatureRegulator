@@ -70,20 +70,27 @@ def upload():
     return ret, 200
 
 
-@app.route('/run/<t>/<va>', defaults={'vb': "0"})
-@app.route('/run/<t>/<va>/<vb>')
-def run(t, va, vb):
+@app.route('/run/<tp>/<va>', defaults={'vb': "0"})
+@app.route('/run/<tp>/<va>/<vb>')
+def run(tp, va, vb):
     ret = get_response("run")
-    ret['value'] = t
-    if t == "program":
+    ret['value'] = tp
+    if tp == "program":
         hot_box.program(msg['program'])
         hot_box.start_program(va)
-    elif t == "heat":
-        x = int(vb)*60
-        hot_box.heat_on(va, x)
-    elif t == "vacuum":
-        x = int(va)*60
-        hot_box.vacuum_on(x)
+    elif tp == "heat":
+        if hot_box.status.heat:
+            hot_box.heat_off()
+        else:
+            t = float(vb)
+            tm = int(va)*60
+            hot_box.heat_on(t, tm)
+    elif tp == "vacuum":
+        if hot_box.status.vacuum:
+            hot_box.vacuum_off()
+        else:
+            tm = int(va)*60
+            hot_box.vacuum_on(tm)
     return ret, 200
 
 
