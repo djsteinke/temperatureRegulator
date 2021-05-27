@@ -70,27 +70,27 @@ def upload():
     return ret, 200
 
 
-@app.route('/run/<tp>/<va>', defaults={'vb': "0"})
-@app.route('/run/<tp>/<va>/<vb>')
-def run(tp, va, vb):
+@app.route('/run')
+def run():
+    tp = request.args.get('type', default='', type=str)
+    temp = request.args.get('temp', default=0.0, type=float)
+    time = request.args.get('time', default=0, type=int)
+    prog = request.args.get('filter', default='', type=str)
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
         hot_box.program(msg['program'])
-        hot_box.start_program(va)
+        hot_box.start_program(prog)
     elif tp == "heat":
         if hot_box.status.heat:
             hot_box.heat_off()
         else:
-            t = float(vb)
-            tm = int(va)*60
-            hot_box.heat_on(t, tm)
+            hot_box.heat_on(temp, time*60)
     elif tp == "vacuum":
         if hot_box.status.vacuum:
             hot_box.vacuum_off()
         else:
-            tm = int(va)*60
-            hot_box.vacuum_on(tm)
+            hot_box.vacuum_on(time*60)
     return ret, 200
 
 
