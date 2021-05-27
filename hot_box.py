@@ -43,6 +43,7 @@ class HotBox(object):
         self._status.step_time = 0
         self._status.hold_temperature = 0
         self._status.heat = self._heat.is_on
+        self._status.elapsed_step_time = 0
         if self._hold_timer is not None:
             self._hold_timer.cancel()
 
