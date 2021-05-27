@@ -23,6 +23,7 @@ class HotBox(object):
         self._program = None
 
     def heat_on(self, temp, run_time):
+        self._s_start_time = time.perf_counter()
         self._status.hold_temperature = temp
         if run_time is None:
             run_time = 3600
