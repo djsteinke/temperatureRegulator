@@ -33,9 +33,10 @@ class HotBox(object):
         self._heat.run_time = run_time
         self._heat.callback = self.heat_off
         self._heat.on()
+        self._status.heat = self._heat.is_on
+        self.hold_temp()
         if not self._recording:
             self.record()
-        self.hold_temp()
 
     def heat_cancel(self):
         self._heat.wait = 0
@@ -56,6 +57,7 @@ class HotBox(object):
         self._vacuum.run_time = run_time
         self._callback = self.vacuum_off
         self._vacuum.on()
+        self._status.vacuum = self._vacuum.is_on
         if not self._recording:
             self.record()
 
