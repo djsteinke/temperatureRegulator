@@ -37,7 +37,7 @@ hot_box = HotBox()
 def get(option):
     if option == "status":
         ret = get_response("status")
-        s_str = json.dumps(hot_box.status.reprJSON(), cls=ComplexEncoder)
+        s_str = json.dumps(hot_box.status.repr_json(), cls=ComplexEncoder)
         #s_str = json.dumps(hot_box.status.__dict__)
         #s_str = re.sub("\"_", "\"", s_str)
         print(s_str)
