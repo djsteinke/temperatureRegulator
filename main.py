@@ -84,12 +84,12 @@ def run():
     elif tp == "heat":
         if hot_box.status.heat:
             hot_box.heat_off()
-        else:
+        elif temp > 0 and time > 0:
             hot_box.heat_on(temp, time*60)
     elif tp == "vacuum":
         if hot_box.status.vacuum:
             hot_box.vacuum_off()
-        else:
+        elif time > 0:
             hot_box.vacuum_on(time*60)
     return ret, 200
 
