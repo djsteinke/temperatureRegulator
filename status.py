@@ -14,6 +14,20 @@ class Status(object):
         self._vacuum_time_remaining = 0
         self._history = []
 
+    def repr_json(self):
+        return dict(humidity=self.humidity,
+                    temperature=self.temperature,
+                    holdTemperature=self.hold_temperature,
+                    step=self.step,
+                    stepTime=self.step_time,
+                    elapsedProgramTime=self._elapsed_program_time,
+                    elapsedStepTime=self.elapsed_step_time,
+                    heatOn=self.heat,
+                    vacuumOn=self.vacuum,
+                    running=self.running,
+                    vacuumTimeRemaining=self.vacuum_time_remaining,
+                    history=self.history)
+
     def add_history(self, val):
         self._history.append(val)
 

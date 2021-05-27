@@ -1,5 +1,3 @@
-import json
-
 
 class History(object):
     def __init__(self):
@@ -7,8 +5,8 @@ class History(object):
         self._temp = 0
         self._vacuum = False
 
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
+    def repr_json(self):
+        return dict(time=self.time, temp=self.temp, vacuum=self.vacuum)
 
     @property
     def time(self):

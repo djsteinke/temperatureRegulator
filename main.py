@@ -4,6 +4,7 @@ import re
 
 from flask import Flask, request, send_from_directory
 
+from ComplexEncoder import ComplexEncoder
 from static import get_logging_level
 from settings import msg, save, load
 from hot_box import HotBox
@@ -36,8 +37,9 @@ hot_box = HotBox()
 def get(option):
     if option == "status":
         ret = get_response("status")
-        s_str = json.dumps(hot_box.status.__dict__)
-        s_str = re.sub("\"_", "\"", s_str)
+        s_str = json.dumps(hot_box.status.reprJSON(), cls=ComplexEncoder)
+        #s_str = json.dumps(hot_box.status.__dict__)
+        #s_str = re.sub("\"_", "\"", s_str)
         print(s_str)
         s_j = json.loads(s_str)
         ret['status'] = s_j
