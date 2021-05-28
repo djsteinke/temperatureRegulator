@@ -76,7 +76,7 @@ class HotBox(object):
         module_logger.debug("vacuum_off()")
         self._vacuum.run_time = 0
         self._status.vacuum_time_remaining = 0
-        self._status.vacuum_running = False
+        self._status.vacuum_running = self._vacuum.is_on
 
     def end_program(self):
         self._status.step = -1
