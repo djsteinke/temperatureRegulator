@@ -43,8 +43,7 @@ class HotBox(object):
             self.record()
 
     def heat_cancel(self):
-        self._heat.wait = 0
-        self._heat.off()
+        self._heat.force_off()
         self.heat_off()
 
     def heat_off(self):
@@ -71,6 +70,7 @@ class HotBox(object):
 
     def vacuum_cancel(self):
         self._vacuum.force_off()
+        self.vacuum_off()
 
     def vacuum_off(self):
         self._vacuum.run_time = 0
