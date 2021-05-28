@@ -20,6 +20,7 @@ class HotBox(object):
         self._history = []
         self._p_start_time = None
         self._s_start_time = None
+        self._r_start_time = None
         self._heat = Relay(heat_pin)
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
@@ -157,15 +158,14 @@ class HotBox(object):
             return int(time.perf_counter() - self._p_start_time)
 
     def record(self):
+        if not self._recording:
+            self._r_start_time = time.perf_counter()
         if self._status.heat_running or self._status.vacuum_running or self._status.prog_running:
             self._recording = True
             history = History()
             history.vacuum = self._status.vacuum_running
             history.temp = self._status.temperature
-            if self._status.elapsed_step_time > 0:
-                history.time = self._status.elapsed_step_time
-            if self._status.elapsed_program_time > 0:
-                history.time = self._status.elapsed_program_time
+            history.time = time.perf_counter() - self._r_start_time
             self._status.add_history(history)
             timer = threading.Timer(10, self.record)
             timer.start()
