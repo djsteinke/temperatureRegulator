@@ -70,8 +70,7 @@ class HotBox(object):
             self.record()
 
     def vacuum_cancel(self):
-        self._vacuum.wait = 0
-        self._vacuum.off()
+        self._vacuum.force_off()
 
     def vacuum_off(self):
         self._vacuum.run_time = 0
@@ -164,7 +163,12 @@ class HotBox(object):
             self._recording = True
             history = History()
             history.vacuum = self._status.vacuum_running
-            history.temp = self._status.temperature
+            if not (self._status.heat_running or self._status.prog_running):
+                r = get_temp()
+                history.temp = r[0]
+                self._status.temperature = r[0]
+            else:
+                history.temp = self._status.temperature
             history.time = int(time.perf_counter() - self._r_start_time)
             history.set_temp = self._status.hold_temperature
             self._status.recording_time = history.time
