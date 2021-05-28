@@ -165,7 +165,7 @@ class HotBox(object):
             history = History()
             history.vacuum = self._status.vacuum_running
             history.temp = self._status.temperature
-            history.time = time.perf_counter() - self._r_start_time
+            history.time = int(time.perf_counter() - self._r_start_time)
             history.set_temp = self._status.hold_temperature
             self._status.recording_time = history.time
             self._status.add_history(history)
