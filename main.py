@@ -103,7 +103,7 @@ def run():
 
 
 @app.route('/cancel')
-def run():
+def cancel():
     tp = request.args.get('type', default='', type=str)
     ret = get_response("cancel")
     ret['value'] = tp
