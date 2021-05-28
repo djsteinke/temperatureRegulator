@@ -157,6 +157,7 @@ class HotBox(object):
 
     def record(self):
         if not self._recording:
+            self._status.history.clear()
             self._r_start_time = time.perf_counter()
         if self._status.heat_running or self._status.vacuum_running or self._status.prog_running:
             self._recording = True
@@ -176,7 +177,6 @@ class HotBox(object):
             timer.start()
         else:
             self._recording = False
-            self._status.history.clear()
 
     @property
     def status(self):
