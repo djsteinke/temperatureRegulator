@@ -3,10 +3,11 @@ class History(object):
     def __init__(self):
         self._time = 0
         self._temp = 0
+        self._set_temp = 0
         self._vacuum = False
 
     def repr_json(self):
-        return dict(time=self.time, temp=self.temp, vacuum=self.vacuum)
+        return dict(time=self.time, temp=self.temp, setTemp=self.set_temp, vacuum=self.vacuum)
 
     @property
     def time(self):
@@ -15,6 +16,10 @@ class History(object):
     @property
     def temp(self):
         return self._temp
+
+    @property
+    def set_temp(self):
+        return self._set_temp
 
     @property
     def vacuum(self):
@@ -31,3 +36,7 @@ class History(object):
     @vacuum.setter
     def vacuum(self, value):
         self._vacuum = value
+
+    @set_temp.setter
+    def set_temp(self, value):
+        self._set_temp = value
