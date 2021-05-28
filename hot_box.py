@@ -62,7 +62,7 @@ class HotBox(object):
         if run_time is None:
             run_time = 3600
         self._vacuum.run_time = run_time
-        self._callback = self.vacuum_off
+        self._vacuum.callback = self.vacuum_off
         self._vacuum.on()
         self._status.vacuum_running = self._vacuum.is_on
         if not self._recording:
@@ -70,7 +70,6 @@ class HotBox(object):
 
     def vacuum_cancel(self):
         self._vacuum.force_off()
-        self.vacuum_off()
 
     def vacuum_off(self):
         self._vacuum.run_time = 0
