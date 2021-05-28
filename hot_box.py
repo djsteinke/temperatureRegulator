@@ -64,7 +64,7 @@ class HotBox(object):
         self._vacuum.run_time = run_time
         self._vacuum.callback = self.vacuum_off
         self._vacuum.on()
-        self._status.vacuum_running = self._vacuum.is_on
+        self._status.vacuum_running = True
         if not self._recording:
             self.record()
 
@@ -74,7 +74,7 @@ class HotBox(object):
     def vacuum_off(self):
         self._vacuum.run_time = 0
         self._status.vacuum_time_remaining = 0
-        self._status.vacuum_running = self._vacuum.is_on
+        self._status.vacuum_running = False
 
     def end_program(self):
         self._status.step = -1
