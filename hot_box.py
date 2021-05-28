@@ -69,9 +69,11 @@ class HotBox(object):
             self.record()
 
     def vacuum_cancel(self):
+        module_logger.debug("vacuum_cancel()")
         self._vacuum.force_off()
 
     def vacuum_off(self):
+        module_logger.debug("vacuum_off()")
         self._vacuum.run_time = 0
         self._status.vacuum_time_remaining = 0
         self._status.vacuum_running = False
