@@ -20,7 +20,9 @@ class Relay(object):
         self.setup_pin()
 
     def on(self):
-        if self._run_time > 0 and self._pin > 0:
+        if self._pin > 0:
+            if self._run_time == 0:
+                self._run_time = 3600
             self._on = True
             self._start_time = time.perf_counter()
             GPIO.output(self._pin, self._gpio_on)

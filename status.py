@@ -8,8 +8,9 @@ class Status(object):
         self._step_time = 0
         self._elapsed_program_time = 0
         self._elapsed_step_time = 0
+        self._heat_running = False
         self._heat_on = False
-        self._vacuum_on = False
+        self._vacuum_running = False
         self._running = False
         self._vacuum_time_remaining = 0
         self._history = []
@@ -22,9 +23,10 @@ class Status(object):
                     stepTime=self.step_time,
                     elapsedProgramTime=self._elapsed_program_time,
                     elapsedStepTime=self.elapsed_step_time,
-                    heatOn=self.heat,
-                    vacuumOn=self.vacuum,
-                    running=self.running,
+                    heatRunning=self.heat_running,
+                    heatOn=self.heat_on,
+                    vacuumRunning=self.vacuum_running,
+                    programRunning=self.prog_running,
                     vacuumTimeRemaining=self.vacuum_time_remaining,
                     history=self.history)
 
@@ -64,19 +66,23 @@ class Status(object):
         return self._elapsed_step_time
 
     @property
-    def heat(self):
+    def heat_running(self):
+        return self._heat_running
+
+    @property
+    def heat_on(self):
         return self._heat_on
 
     @property
-    def vacuum(self):
-        return self._vacuum_on
+    def vacuum_running(self):
+        return self._vacuum_running
 
     @property
     def vacuum_time_remaining(self):
         return self._vacuum_time_remaining
 
     @property
-    def running(self):
+    def prog_running(self):
         return self._running
 
     @humidity.setter
@@ -107,20 +113,24 @@ class Status(object):
     def elapsed_step_time(self, value):
         self._elapsed_step_time = value
 
-    @heat.setter
-    def heat(self, value):
+    @heat_running.setter
+    def heat_running(self, value):
+        self._heat_running = value
+
+    @heat_on.setter
+    def heat_on(self, value):
         self._heat_on = value
 
-    @vacuum.setter
-    def vacuum(self, value):
-        self._vacuum_on = value
+    @vacuum_running.setter
+    def vacuum_running(self, value):
+        self._vacuum_running = value
 
     @vacuum_time_remaining.setter
     def vacuum_time_remaining(self, value):
         self._vacuum_time_remaining = value
 
-    @running.setter
-    def running(self, value):
+    @prog_running.setter
+    def prog_running(self, value):
         self._running = value
 
     @history.setter

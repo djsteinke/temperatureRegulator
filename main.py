@@ -81,18 +81,39 @@ def run():
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
-        hot_box.program(msg['program'])
-        hot_box.start_program(program)
-    elif tp == "heat":
-        if hot_box.status.heat:
-            hot_box.heat_cancel()
-        elif temp > 0 and time > 0:
+        if not hot_box.status.prog_running:
+            hot_box.program(msg['program'])
+            hot_box.start_program(program)
+        else:
+            ret['code'] = 301
+            ret['error'] = "Program already running."
+    elif tp == "heat" and temp > 0 and time > 0:
+        if not hot_box.status.heat_running:
             hot_box.heat_on(temp, time*60)
-    elif tp == "vacuum":
-        if hot_box.status.vacuum:
-            hot_box.vacuum_cancel()
-        elif time > 0:
+        else:
+            ret['code'] = 301
+            ret['error'] = "Heat already running."
+    elif tp == "vacuum" and time > 0:
+        if not hot_box.status.vacuum_running:
             hot_box.vacuum_on(time*60)
+        else:
+            ret['code'] = 301
+            ret['error'] = "Vacuum already running."
+    return ret, 200
+
+
+@app.route('/cancel')
+def run():
+    tp = request.args.get('type', default='', type=str)
+    ret = get_response("cancel")
+    ret['value'] = tp
+    if tp == "program":
+        hot_box.program(msg['program'])
+        hot_box.end_program()
+    elif tp == "heat":
+        hot_box.heat_cancel()
+    elif tp == "vacuum":
+        hot_box.vacuum_cancel()
     return ret, 200
 
 
