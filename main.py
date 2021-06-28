@@ -1,12 +1,12 @@
 import logging
 import socket
-import re
 
 from flask import Flask, request, send_from_directory
 
 from ComplexEncoder import ComplexEncoder
 from static import get_logging_level
-from settings import msg, save, load
+from settings import msg, load, update_program
+from define.program import Program
 from hot_box import HotBox
 import json
 import os
@@ -33,13 +33,16 @@ logger.addHandler(ch)
 hot_box = HotBox()
 
 
+@app.route('/programs/add/<val>')
+def programs(val):
+    update_program(json.loads(val))
+
+
 @app.route('/get/<option>')
 def get(option):
     if option == "status":
         ret = get_response("status")
         s_str = json.dumps(hot_box.status.repr_json(), cls=ComplexEncoder)
-        #s_str = json.dumps(hot_box.status.__dict__)
-        #s_str = re.sub("\"_", "\"", s_str)
         print(s_str)
         s_j = json.loads(s_str)
         ret['status'] = s_j
@@ -63,12 +66,10 @@ def pi_action(action):
 @app.route('/upload', methods=['POST'])
 def upload():
     x = request.json
-    y = json.dumps(x)
-    print(y)
-    logger.debug("upload() program[" + y + "]")
-    msg['program'] = x
-    save()
+    p = Program(**x)
+    update_program(p)
     ret = get_response('upload')
+    ret['value'] = f'Program "{p.name}" updated.'
     return ret, 200
 
 

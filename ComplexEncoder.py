@@ -7,3 +7,4 @@ class ComplexEncoder(json.JSONEncoder):
             return obj.repr_json()
         else:
             return json.JSONEncoder.default(self, obj)
+
