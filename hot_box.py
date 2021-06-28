@@ -88,10 +88,8 @@ class HotBox(object):
         if self._step_timer is not None:
             self._step_timer.cancel()
             self._step_timer = None
-        if self._heat.is_on:
-            self._heat.force_off()
-        if self._vacuum.is_on:
-            self._vacuum.force_off()
+        self._heat.force_off()
+        self._vacuum.force_off()
         self._status.heat_running = self._heat.is_on
         self._status.vacuum_running = self._vacuum.is_on
         module_logger.info(f"Program Ended")
