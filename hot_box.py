@@ -142,10 +142,11 @@ class HotBox(object):
                     module_logger.debug("Step " + str_obj + " Status[" + str(self._status.step) + "]")
                     found = True
                     self._s_start_time = time.perf_counter()
-                    self._status.set_temperature = int(obj.temperature)
+                    self._status.hold_temperature = float(obj.temperature)
                     if self._hold_timer is not None:
                         self.hold_temp()
-                    t = int(obj.time)*60
+                    t = float(obj.time)*60
+                    self._status.step_time = t
                     self._step_timer = threading.Timer(t, self.run_step)
                     self._step_timer.start()
             self._status.prog_running = found
