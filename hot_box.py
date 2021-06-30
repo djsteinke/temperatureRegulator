@@ -130,9 +130,9 @@ class HotBox(object):
         else:
             found = False
             for obj in self._program.steps:
-                strObj = json.dumps(obj.repr_json(), cls=ComplexEncoder)
-                module_logger.debug("Step " + strObj + " Status[" + str(self._status.step) + "]")
                 if obj.step == self._status.step:
+                    strObj = json.dumps(obj.repr_json(), cls=ComplexEncoder)
+                    module_logger.debug("Step " + strObj + " Status[" + str(self._status.step) + "]")
                     found = True
                     self._s_start_time = time.perf_counter()
                     self._status.set_temperature = obj.temperature
