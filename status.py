@@ -6,13 +6,13 @@ class Status(object):
         self._hold_temperature = 0.0
         self._step = -1
         self._step_time = 0
-        self._elapsed_program_time = 0.0
-        self._elapsed_step_time = 0.0
+        self._elapsed_program_time = 0
+        self._elapsed_step_time = 0
         self._heat_running = False
         self._heat_on = False
         self._vacuum_running = False
         self._running = False
-        self._vacuum_time_remaining = 0.0
+        self._vacuum_time_remaining = 0
         self._recording_time = 0
         self._history = []
 

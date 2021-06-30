@@ -171,16 +171,16 @@ class HotBox(object):
         self._hold_timer.start()
 
     def time_in_step(self):
-        if self._s_start_time > 0.0:
-            return 0.0
-        else:
+        if self._s_start_time > 0:
             return time.perf_counter() - self._s_start_time
+        else:
+            return 0.0
 
     def time_in_program(self):
-        if self._p_start_time > 0.0:
-            return 0.0
-        else:
+        if self._p_start_time > 0:
             return time.perf_counter() - self._p_start_time
+        else:
+            return 0
 
     def record(self):
         if not self._recording:
