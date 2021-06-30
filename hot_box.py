@@ -172,13 +172,13 @@ class HotBox(object):
 
     def time_in_step(self):
         if self._s_start_time > 0:
-            return time.perf_counter() - self._s_start_time
+            return int(time.perf_counter() - self._s_start_time)
         else:
-            return 0.0
+            return 0
 
     def time_in_program(self):
         if self._p_start_time > 0:
-            return time.perf_counter() - self._p_start_time
+            return int(time.perf_counter() - self._p_start_time)
         else:
             return 0
 
