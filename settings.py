@@ -1,10 +1,12 @@
 import json
 import logging
+import os
 
 from ComplexEncoder import ComplexEncoder
 from define.program import Program
 from define.programs import Programs
 from define.step import Step
+from static import fdir
 
 module_logger = logging.getLogger('main.settings')
 
@@ -27,7 +29,7 @@ def save(file, value):
 
 class Settings(object):
     def __init__(self):
-        self._file = "programs.json"
+        self._file = os.path.join(fdir, "programs.json")
         self._msg = 1
         self._programs = Programs()
 
