@@ -7,10 +7,13 @@ from define.step import Step
 
 
 def load(file):
-    f = open(file, "r")
-    contents = f.read()
-    f.close()
-    return contents
+    try:
+        f = open(file, "r")
+        contents = f.read()
+        f.close()
+        return contents
+    except FileNotFoundError:
+        return None
 
 
 def save(file, value):
@@ -35,8 +38,9 @@ class Settings(object):
 
     def load(self):
         c = load(self.file)
-        j = json.loads(c)
-        self.process_programs_json(j)
+        if c is not None:
+            j = json.loads(c)
+            self.process_programs_json(j)
 
     def update_program(self, p):
         found = False
