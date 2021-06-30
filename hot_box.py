@@ -174,13 +174,13 @@ class HotBox(object):
         if self._s_start_time > 0:
             return 0
         else:
-            return int(time.perf_counter() - self._s_start_time)
+            return time.perf_counter() - self._s_start_time
 
     def time_in_program(self):
         if self._p_start_time > 0:
             return 0
         else:
-            return int(time.perf_counter() - self._p_start_time)
+            return time.perf_counter() - self._p_start_time
 
     def record(self):
         if not self._recording:
