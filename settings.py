@@ -65,7 +65,7 @@ class Settings(object):
         if not found:
             self.programs.append(p)
         s_str = json.dumps(self._programs.repr_json(), cls=ComplexEncoder)
-        print(s_str)
+        module_logger.debug("update_program\n" + s_str)
         save(self.file, s_str)
 
     def process_programs_json(self, j):
@@ -77,5 +77,6 @@ class Settings(object):
                 step = Step(**item_s)
                 program.steps.append(step)
             self.programs.append(program)
-        print(type(self._programs))
-        print(json.dumps(self._programs.repr_json(), cls=ComplexEncoder))
+        s_str = json.dumps(self._programs.repr_json(), cls=ComplexEncoder)
+        module_logger.debug("process_programs_json\n" + s_str)
+        save(self.file, s_str)
