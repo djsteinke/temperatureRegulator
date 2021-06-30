@@ -10,6 +10,8 @@ from history import History
 from settings import Settings
 
 module_logger = logging.getLogger('main.hot_box')
+max_temp_f = 160
+max_temp_c = (max_temp_f-32)/1.8
 
 
 class HotBox(object):
@@ -147,7 +149,7 @@ class HotBox(object):
         if self._vacuum.is_on:
             self._status.vacuum_time_remaining = self._vacuum.run_time-self._vacuum.on_time()
         if self._status.hold_temperature > 0:
-            if self._status.temperature > self._status.hold_temperature:
+            if self._status.temperature > self._status.hold_temperature or self._status.temperature > max_temp_c:
                 self._heat.force_off()
             else:
                 self._heat.on()
