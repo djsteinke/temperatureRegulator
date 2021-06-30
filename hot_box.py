@@ -13,8 +13,7 @@ from settings import Settings
 from define.program import Program
 
 module_logger = logging.getLogger('main.hot_box')
-max_temp_f = 160
-max_temp_c = (max_temp_f-32)/1.8
+max_temp_c = 72
 
 
 class HotBox(object):

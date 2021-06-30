@@ -22,14 +22,14 @@ class Status(object):
                     holdTemperature=self.hold_temperature,
                     step=self.step,
                     stepTime=self.step_time,
-                    elapsedProgramTime=self._elapsed_program_time,
-                    elapsedStepTime=self.elapsed_step_time,
+                    elapsedProgramTime=int(self._elapsed_program_time),
+                    elapsedStepTime=int(self.elapsed_step_time),
                     heatRunning=self.heat_running,
                     heatOn=self.heat_on,
                     vacuumRunning=self.vacuum_running,
                     programRunning=self.prog_running,
-                    vacuumTimeRemaining=self.vacuum_time_remaining,
-                    recordingTime=self.recording_time,
+                    vacuumTimeRemaining=int(self.vacuum_time_remaining),
+                    recordingTime=int(self.recording_time),
                     history=self.history)
 
     def add_history(self, val):
