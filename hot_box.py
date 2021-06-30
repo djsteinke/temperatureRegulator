@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+import json
 
 from static import get_temp
 from relay import Relay
@@ -128,6 +129,7 @@ class HotBox(object):
         else:
             found = False
             for obj in self._program.steps:
+                module_logger.debug("Step " + json.dumps(obj))
                 if obj.step == self._status.step:
                     found = True
                     self._s_start_time = time.perf_counter()
