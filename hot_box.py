@@ -34,6 +34,13 @@ class HotBox(object):
         self._program = Program()
         self._recording = False
 
+    def repr_json(self):
+        return dict(programStartTime=self._p_start_time,
+                    stepStartTime=self._s_start_time,
+                    recordStartTime=self._r_start_time,
+                    status=self._status,
+                    program=self._program)
+
     def heat_on(self, temp, run_time):
         self._s_start_time = time.perf_counter()
         self._status.hold_temperature = temp
@@ -131,8 +138,8 @@ class HotBox(object):
             found = False
             for obj in self._program.steps:
                 if obj.step == self._status.step:
-                    strObj = json.dumps(obj.repr_json(), cls=ComplexEncoder)
-                    module_logger.debug("Step " + strObj + " Status[" + str(self._status.step) + "]")
+                    str_obj = json.dumps(obj.repr_json(), cls=ComplexEncoder)
+                    module_logger.debug("Step " + str_obj + " Status[" + str(self._status.step) + "]")
                     found = True
                     self._s_start_time = time.perf_counter()
                     self._status.set_temperature = int(obj.temperature)
@@ -142,6 +149,7 @@ class HotBox(object):
                     self._step_timer = threading.Timer(t, self.run_step)
                     self._step_timer.start()
             self._status.prog_running = found
+            module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
             if not self._status.prog_running:
                 self.end_program()
 
