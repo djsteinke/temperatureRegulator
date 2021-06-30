@@ -8,6 +8,7 @@ from properties import heat_pin, vacuum_pin
 from status import Status
 from history import History
 from settings import Settings
+from define.program import Program
 
 module_logger = logging.getLogger('main.hot_box')
 max_temp_f = 160
@@ -28,7 +29,7 @@ class HotBox(object):
         self._heat = Relay(heat_pin)
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
-        self._program = None
+        self._program = Program()
         self._recording = False
 
     def heat_on(self, temp, run_time):
