@@ -3,6 +3,7 @@ import threading
 import time
 import json
 
+from ComplexEncoder import ComplexEncoder
 from static import get_temp
 from relay import Relay
 from properties import heat_pin, vacuum_pin
@@ -129,7 +130,8 @@ class HotBox(object):
         else:
             found = False
             for obj in self._program.steps:
-                module_logger.debug("Step " + json.dumps(obj))
+                strObj = json.dumps(obj.repr_json(), cls=ComplexEncoder)
+                module_logger.debug("Step " + strObj)
                 if obj.step == self._status.step:
                     found = True
                     self._s_start_time = time.perf_counter()
