@@ -59,6 +59,7 @@ def pi_action(action):
 @app.route('/upload', methods=['POST'])
 def upload():
     x = request.json
+    logger.debug('/upload\n' + json.dumps(x))
     ret = get_response('upload')
     if 'programs' in x:
         hot_box.settings.process_programs_json(x)

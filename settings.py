@@ -46,7 +46,6 @@ class Settings(object):
             self.process_programs_json(j)
 
     def update_program(self, p):
-        module_logger.debug(json.dumps(p))
         found = False
         i = 0
         program = Program(**p)
