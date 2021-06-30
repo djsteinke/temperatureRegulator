@@ -25,9 +25,9 @@ class HotBox(object):
         self._heat_timer = None
         self._status = Status()
         self._history = []
-        self._p_start_time = None
-        self._s_start_time = None
-        self._r_start_time = None
+        self._p_start_time = 0
+        self._s_start_time = 0
+        self._r_start_time = 0
         self._heat = Relay(heat_pin)
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
@@ -172,13 +172,13 @@ class HotBox(object):
         self._hold_timer.start()
 
     def time_in_step(self):
-        if self._s_start_time is None:
+        if self._s_start_time > 0:
             return 0
         else:
             return int(time.perf_counter() - self._s_start_time)
 
     def time_in_program(self):
-        if self._p_start_time is None:
+        if self._p_start_time > 0:
             return 0
         else:
             return int(time.perf_counter() - self._p_start_time)
