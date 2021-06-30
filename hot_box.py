@@ -7,12 +7,14 @@ from relay import Relay
 from properties import heat_pin, vacuum_pin
 from status import Status
 from history import History
+from settings import Settings
 
 module_logger = logging.getLogger('main.hot_box')
 
 
 class HotBox(object):
     def __init__(self):
+        self._settings = Settings()
         self._hold_timer = None
         self._step_timer = None
         self._heat_timer = None
@@ -97,29 +99,39 @@ class HotBox(object):
             self._callback()
 
     def start_program(self, name):
-        print("Program.run()")
-        self._p_start_time = time.perf_counter()
-        self._status.prog_running = True
-        self.run_step()
-        if not self._recording:
-            self.record()
-        module_logger.info(f"Program {name} Started")
+        module_logger.info(f"Program.run({name})")
+        found = False
+        for p in self.settings.programs:
+            print(p.name)
+            if p.name == name:
+                self._program = p
+                found = True
+                break
+        if found:
+            self._p_start_time = time.perf_counter()
+            self._status.prog_running = True
+            self.run_step()
+            if not self._recording:
+                self.record()
+            module_logger.info(f"Program {name} Started")
+        else:
+            module_logger.error(f"Program {name} Not Found")
 
     def run_step(self):
         self._status.step += 1
         self._s_start_time = None
-        if not self._status.prog_running or self._status.step >= len(self._program):
+        if not self._status.prog_running or self._status.step >= len(self._program.steps):
             self.end_program()
         else:
             found = False
-            for obj in self._program:
-                if obj["step"] == self._status.step:
+            for obj in self._program.steps:
+                if obj.step == self._status.step:
                     found = True
                     self._s_start_time = time.perf_counter()
-                    self._status.set_temperature = obj["temperature"]
+                    self._status.set_temperature = obj.temperature
                     if self._hold_timer is not None:
                         self.hold_temp()
-                    t = obj['time']*60
+                    t = obj.time*60
                     self._step_timer = threading.Timer(t, self.run_step)
                     self._step_timer.start()
             self._status.prog_running = found
@@ -179,6 +191,10 @@ class HotBox(object):
             self._recording = False
 
     @property
+    def settings(self):
+        return self._settings
+
+    @property
     def status(self):
         if not (self._status.prog_running or self._status.heat_running or
                 self._status.vacuum_running):
@@ -194,6 +210,10 @@ class HotBox(object):
     @property
     def program(self):
         return self._program
+
+    @settings.setter
+    def settings(self, value):
+        self._settings = value
 
     @callback.setter
     def callback(self, value):

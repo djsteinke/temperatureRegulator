@@ -5,8 +5,6 @@ from flask import Flask, request, send_from_directory
 
 from ComplexEncoder import ComplexEncoder
 from static import get_logging_level
-from settings import msg, load, update_program
-from define.program import Program
 from hot_box import HotBox
 import json
 import os
@@ -31,11 +29,6 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 hot_box = HotBox()
-
-
-@app.route('/programs/add/<val>')
-def programs(val):
-    update_program(json.loads(val))
 
 
 @app.route('/get/<option>')
@@ -66,10 +59,13 @@ def pi_action(action):
 @app.route('/upload', methods=['POST'])
 def upload():
     x = request.json
-    p = Program(**x)
-    update_program(p)
     ret = get_response('upload')
-    ret['value'] = f'Program "{p.name}" updated.'
+    if 'programs' in x:
+        hot_box.settings.process_programs_json(x)
+        ret['value'] = 'Programs loaded.'
+    else:
+        hot_box.settings.update_program(x)
+        ret['value'] = f'Program {x["name"]} loaded.'
     return ret, 200
 
 
@@ -83,7 +79,6 @@ def run():
     ret['value'] = tp
     if tp == "program":
         if not hot_box.status.prog_running:
-            hot_box.program(msg['program'])
             hot_box.start_program(program)
         else:
             ret['code'] = 301
@@ -109,7 +104,6 @@ def cancel():
     ret = get_response("cancel")
     ret['value'] = tp
     if tp == "program":
-        hot_box.program(msg['program'])
         hot_box.end_program()
     elif tp == "heat":
         hot_box.heat_cancel()
@@ -151,5 +145,5 @@ if __name__ == '__main__':
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
-    load()
+    hot_box.settings.load()
     app.run(host=host_name, port=1983)

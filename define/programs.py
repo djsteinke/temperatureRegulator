@@ -1,7 +1,3 @@
-from typing import List
-
-from define.program import Program
-
 
 class Programs(object):
     def __init__(self, **kwargs):
