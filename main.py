@@ -8,6 +8,7 @@ from static import get_logging_level
 from hot_box import HotBox
 import json
 import os
+import subprocess
 
 app = Flask(__name__)
 
@@ -36,7 +37,6 @@ def get(option):
     if option == "status":
         ret = get_response("status")
         s_str = json.dumps(hot_box.status.repr_json(), cls=ComplexEncoder)
-        print(s_str)
         s_j = json.loads(s_str)
         ret['status'] = s_j
         return ret, 200
@@ -44,11 +44,14 @@ def get(option):
 
 @app.route('/pi/<action>')
 def pi_action(action):
-    cmd = "sudo shutdown -"
     ret = get_response("pi")
     if action == "r" or action == "h":
         ret['value'] = action
-        os.system(f"{cmd} {action}")
+        now = ""
+        if action == "h":
+            now = " now"
+        cmd = f"sudo shutdown -{action}{now}"
+        subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
     else:
         ret['code'] = 400
         ret['value'] = action
