@@ -19,10 +19,11 @@ max_temp_c = 72
 class HotBox(object):
     def __init__(self):
         self._settings = Settings()
+        self._status = Status()
+        self._program = Program()
         self._hold_timer = None
         self._step_timer = None
         self._heat_timer = None
-        self._status = Status()
         self._history = []
         self._p_start_time = 0.0
         self._s_start_time = 0.0
@@ -30,84 +31,68 @@ class HotBox(object):
         self._heat = Relay(heat_pin)
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
-        self._program = Program()
         self._recording = False
 
     def repr_json(self):
-        return dict(programStartTime=self._p_start_time,
-                    stepStartTime=self._s_start_time,
-                    recordStartTime=self._r_start_time,
-                    status=self._status,
-                    program=self._program)
+        return dict(programStartTime=self.p_start_time,
+                    stepStartTime=self.s_start_time,
+                    recordStartTime=self.r_start_time,
+                    status=self.status,
+                    program=self.program)
 
     def heat_on(self, temp, run_time):
-        self._s_start_time = time.perf_counter()
-        self._status.hold_temperature = temp
+        self.s_start_time = time.perf_counter()
+        self.status.hold_temperature = temp
         if run_time is None:
             run_time = 3600
-        self._status.step_time = run_time
-        self._heat.on()
-        self._status.heat_running = True
-        self._status.heat_on = self._heat.is_on
-        self.hold_temp()
-        self._heat_timer = threading.Timer(run_time, self.heat_off)
-        self._heat_timer.start()
-        if not self._recording:
+        self.status.step_time = run_time
+        self.heat.on()
+        self.status.heat_running = True
+        self.status.heat_on = self.heat.is_on
+        self.hold_step()
+        self.heat_timer = threading.Timer(run_time, self.heat_off)
+        self.heat_timer.start()
+        if not self.recording:
             self.record()
 
     def heat_cancel(self):
-        self._heat.force_off()
+        self.heat.force_off()
         self.heat_off()
 
     def heat_off(self):
-        self._heat.run_time = 0
-        self._status.step_time = 0
-        self._status.hold_temperature = 0
-        self._status.elapsed_step_time = 0
-        self._status.heat_running = False
-        self._status.heat_on = self._heat.is_on
-        if self._heat_timer is not None:
-            self._heat_timer.cancel()
-        if self._hold_timer is not None:
-            self._hold_timer.cancel()
+        self.heat.run_time = 0
+        self.s_start_time = 0
+        self.status.step_time = 0
+        self.status.hold_temperature = 0
+        self.status.elapsed_step_time = 0
+        self.status.heat_running = False
+        self.status.heat_on = self.heat.is_on
+        if self.heat_timer is not None:
+            self.heat_timer.cancel()
+            self.heat_timer = None
+        if self.hold_timer is not None:
+            self.hold_timer.cancel()
+            self.hold_timer = None
 
     def vacuum_on(self, run_time):
         if run_time is None:
             run_time = 3600
-        self._vacuum.run_time = run_time
-        self._vacuum.callback = self.vacuum_off
-        self._vacuum.on()
-        self._status.vacuum_running = True
-        if not self._recording:
+        self.vacuum.run_time = run_time
+        self.vacuum.callback = self.vacuum_off
+        self.vacuum.on()
+        self.status.vacuum_running = True
+        if not self.recording:
             self.record()
 
     def vacuum_cancel(self):
         module_logger.debug("vacuum_cancel()")
-        self._vacuum.force_off()
+        self.vacuum.force_off()
 
     def vacuum_off(self):
         module_logger.debug("vacuum_off()")
-        self._vacuum.run_time = 0
-        self._status.vacuum_time_remaining = 0
-        self._status.vacuum_running = self._vacuum.is_on
-
-    def end_program(self):
-        self._status.step = -1
-        self._status.hold_temperature = 0
-        self._status.prog_running = False
-        if self._hold_timer is not None:
-            self._hold_timer.cancel()
-            self._hold_timer = None
-        if self._step_timer is not None:
-            self._step_timer.cancel()
-            self._step_timer = None
-        self._heat.force_off()
-        self._vacuum.force_off()
-        self._status.heat_running = self._heat.is_on
-        self._status.vacuum_running = self._vacuum.is_on
-        module_logger.info(f"Program Ended")
-        if self._callback is not None:
-            self._callback()
+        self.vacuum.run_time = 0
+        self.status.vacuum_time_remaining = 0
+        self.status.vacuum_running = self.vacuum.is_on
 
     def start_program(self, name):
         module_logger.info(f"Program.run({name})")
@@ -115,95 +100,161 @@ class HotBox(object):
         for p in self.settings.programs:
             print(p.name)
             if p.name == name:
-                self._program = p
+                self.program = p
                 found = True
                 break
         if found:
-            self._p_start_time = time.perf_counter()
-            self._status.prog_running = True
+            self.p_start_time = time.perf_counter()
+            self.status.prog_running = True
+            self.hold_timer = None
             self.run_step()
-            if not self._recording:
+            if not self.recording:
                 self.record()
             module_logger.info(f"Program {name} Started")
+            return [200, f"Program {name} Started"]
         else:
             module_logger.error(f"Program {name} Not Found")
+            return [400, f"Program {name} Not Found"]
+
+    def end_program(self):
+        self.status.step = -1
+        self.status.hold_temperature = 0
+        self.status.elapsed_program_time = 0
+        self.p_start_time = 0
+        self.status.prog_running = False
+        if self.hold_timer is not None:
+            self.hold_timer.cancel()
+            self.hold_timer = None
+        if self.step_timer is not None:
+            self.step_timer.cancel()
+            self.step_timer = None
+        self.heat.force_off()
+        self.vacuum.force_off()
+        self.status.heat_running = self.heat.is_on
+        self.status.vacuum_running = self.vacuum.is_on
+        module_logger.info(f"Program Ended")
+        if self.callback is not None:
+            self.callback()
 
     def run_step(self):
-        self._status.step += 1
-        self._s_start_time = None
-        if not self._status.prog_running or self._status.step >= len(self._program.steps):
-            self.end_program()
-        else:
+        self.status.step += 1
+        self.s_start_time = None
+        if self.status.prog_running and self.status.step < len(self.program.steps):
             found = False
-            for obj in self._program.steps:
-                if obj.step == self._status.step:
-                    str_obj = json.dumps(obj.repr_json(), cls=ComplexEncoder)
-                    module_logger.debug("Step " + str_obj + " Status[" + str(self._status.step) + "]")
+            for obj in self.program.steps:
+                if obj.step == self.status.step:
                     found = True
-                    self._s_start_time = time.perf_counter()
-                    self._status.hold_temperature = float(obj.temperature)
-                    if self._hold_timer is not None:
-                        self.hold_temp()
-                    t = float(obj.time)*60
-                    self._status.step_time = t
-                    self._step_timer = threading.Timer(t, self.run_step)
-                    self._step_timer.start()
-            self._status.prog_running = found
+                    self.s_start_time = time.perf_counter()
+                    self.status.hold_temperature = float(obj.temperature)
+                    t = obj.time*60
+                    self.status.step_time = t
+                    self.step_timer = threading.Timer(t, self.run_step)
+                    self.step_timer.start()
+                    if self.hold_timer is None:
+                        self.hold_step()
+                    if obj.vacuum:
+                        self.vacuum.run_time = t
+                        self.vacuum.on()
+            self.status.prog_running = found
             module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
-            if not self._status.prog_running:
+            if not self.status.prog_running:
                 self.end_program()
+        else:
+            self.end_program()
 
-    def hold_temp(self):
+    def hold_step(self):
         t = get_temp()
-        self._status.temperature = t[0]
-        self._status.humidity = t[1]
-        self._status.elapsed_step_time = self.time_in_step()
-        self._status.elapsed_program_time = self.time_in_program()
-        if self._vacuum.is_on:
-            self._status.vacuum_time_remaining = self._vacuum.run_time-self._vacuum.on_time()
-        if self._status.hold_temperature > 0:
-            if self._status.temperature > self._status.hold_temperature or self._status.temperature > max_temp_c:
-                self._heat.force_off()
+        self.status.temperature = t[0]
+        self.status.humidity = t[1]
+        self.status.elapsed_step_time = self.time_in_step()
+        self.status.elapsed_program_time = self.time_in_program()
+        if self.vacuum.is_on:
+            self.status.vacuum_time_remaining = self.vacuum.run_time-self.vacuum.on_time()
+        if self.status.hold_temperature > 0:
+            if self.status.temperature <= self.status.hold_temperature and self.status.temperature < max_temp_c:
+                if not self.heat.is_on:
+                    self.heat.on()
             else:
-                self._heat.on()
-        self._status.heat_on = self._heat.is_on
-        self._hold_timer = threading.Timer(10, self.hold_temp)
-        self._hold_timer.start()
+                self.heat.force_off()
+        self.status.heat_on = self._heat.is_on
+        self.hold_timer = threading.Timer(10, self.hold_step)
+        self.hold_timer.start()
 
     def time_in_step(self):
-        if self._s_start_time > 0:
-            return int(time.perf_counter() - self._s_start_time)
+        if self.s_start_time > 0:
+            return int(time.perf_counter() - self.s_start_time)
         else:
             return 0
 
     def time_in_program(self):
-        if self._p_start_time > 0:
-            return int(time.perf_counter() - self._p_start_time)
+        if self.p_start_time > 0:
+            return int(time.perf_counter() - self.p_start_time)
         else:
             return 0
 
     def record(self):
-        if not self._recording:
-            self._status.history.clear()
-            self._r_start_time = time.perf_counter()
-        if self._status.heat_running or self._status.vacuum_running or self._status.prog_running:
-            self._recording = True
+        if not self.recording:
+            self.status.history.clear()
+            self.r_start_time = time.perf_counter()
+        if self.status.heat_running or self.status.vacuum_running or self.status.prog_running:
+            self.recording = True
             history = History()
-            history.vacuum = self._status.vacuum_running
-            if not (self._status.heat_running or self._status.prog_running):
-                r = get_temp()
-                history.temp = r[0]
-                self._status.temperature = r[0]
-            else:
-                history.temp = self._status.temperature
-            history.time = int(time.perf_counter() - self._r_start_time)
-            history.set_temp = self._status.hold_temperature
-            self._status.recording_time = history.time
-            self._status.add_history(history)
+            status = self.status
+            history.vacuum = status.vacuum_running
+            history.temp = status.temperature
+            history.time = int(time.perf_counter() - self.r_start_time)
+            history.set_temp = status.hold_temperature
+            status.recording_time = history.time
+            status.add_history(history)
+            self.status = status
             timer = threading.Timer(10, self.record)
             timer.start()
         else:
-            self._recording = False
+            self.recording = False
+
+    @property
+    def hold_timer(self):
+        return self._hold_timer
+
+    @property
+    def step_timer(self):
+        return self._step_timer
+
+    @property
+    def heat_timer(self):
+        return self._heat_timer
+
+    @property
+    def history(self):
+        return self._history
+
+    @property
+    def p_start_time(self):
+        return self._p_start_time
+
+    @property
+    def s_start_time(self):
+        return self._s_start_time
+
+    @property
+    def r_start_time(self):
+        return self._r_start_time
+
+    @property
+    def heat(self):
+        return self._heat
+
+    @property
+    def vacuum(self):
+        return self._vacuum
+
+    @property
+    def recording(self):
+        return self._recording
+
+    @property
+    def program(self):
+        return self._program
 
     @property
     def settings(self):
@@ -211,8 +262,7 @@ class HotBox(object):
 
     @property
     def status(self):
-        if not (self._status.prog_running or self._status.heat_running or
-                self._status.vacuum_running):
+        if self.hold_timer is None:
             r = get_temp()
             self._status.temperature = r[0]
             self._status.humidity = r[1]
@@ -222,18 +272,58 @@ class HotBox(object):
     def callback(self):
         return self._callback
 
-    @property
-    def program(self):
-        return self._program
+    @hold_timer.setter
+    def hold_timer(self, hold_timer):
+        self._hold_timer = hold_timer
 
-    @settings.setter
-    def settings(self, value):
-        self._settings = value
+    @step_timer.setter
+    def step_timer(self, step_timer):
+        self._step_timer = step_timer
 
-    @callback.setter
-    def callback(self, value):
-        self._callback = value
+    @heat_timer.setter
+    def heat_timer(self, heat_timer):
+        self._heat_timer = heat_timer
+
+    @history.setter
+    def history(self, history):
+        self._history = history
+
+    @p_start_time.setter
+    def p_start_time(self, p_start_time):
+        self._p_start_time = p_start_time
+
+    @s_start_time.setter
+    def s_start_time(self, s_start_time):
+        self._s_start_time = s_start_time
+
+    @r_start_time.setter
+    def r_start_time(self, r_start_time):
+        self._r_start_time = r_start_time
+
+    @heat.setter
+    def heat(self, heat):
+        self._heat = heat
+
+    @vacuum.setter
+    def vacuum(self, vacuum):
+        self._vacuum = vacuum
+
+    @recording.setter
+    def recording(self, recording):
+        self._recording = recording
 
     @program.setter
-    def program(self, value):
-        self._program = value
+    def program(self, program):
+        self._program = program
+
+    @settings.setter
+    def settings(self, settings):
+        self._settings = settings
+
+    @status.setter
+    def status(self, status):
+        self._status = status
+
+    @callback.setter
+    def callback(self, callback):
+        self._callback = callback

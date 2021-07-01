@@ -80,7 +80,12 @@ def run():
     ret['value'] = tp
     if tp == "program":
         if not hot_box.status.prog_running:
-            hot_box.start_program(program)
+            r = hot_box.start_program(program)
+            ret['code'] = r[0]
+            if r[0] != 200:
+                ret['error'] = r[1]
+            else:
+                ret['value'] = r[1]
         else:
             ret['code'] = 301
             ret['error'] = "Program already running."
@@ -118,6 +123,7 @@ def get_response(response_type):
             "type": response_type,
             "value": None,
             "error": None,
+            "message": None,
             "status": {}}
 
 
