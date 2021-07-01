@@ -47,10 +47,7 @@ def pi_action(action):
     ret = get_response("pi")
     if action == "r" or action == "h":
         ret['value'] = action
-        now = ""
-        if action == "h":
-            now = " now"
-        cmd = f"sudo shutdown -{action}{now}"
+        cmd = f"sudo shutdown -{action} now"
         subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
     else:
         ret['code'] = 400
