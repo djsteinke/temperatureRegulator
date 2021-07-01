@@ -2,13 +2,9 @@ import logging
 import properties
 import smbus
 import time
-import os
 
 bus = smbus.SMBus(1)
 config = [0x08, 0x00]
-
-# fdir = os.path.abspath('/home/pi/projects/temperatureRegulator')
-fdir = os.path.abspath('C:/MyData/Program Files/PyCharm/temperatureRegulator')
 
 
 def get_logging_level():

@@ -6,7 +6,7 @@ from ComplexEncoder import ComplexEncoder
 from define.program import Program
 from define.programs import Programs
 from define.step import Step
-from static import fdir
+from properties import fdir
 
 module_logger = logging.getLogger('main.settings')
 
