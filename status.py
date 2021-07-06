@@ -33,7 +33,11 @@ class Status(object):
                     history=self.history)
 
     def add_history(self, val):
-        self._history.append(val)
+        cnt = 60*4
+        h_l = len(self.history)
+        while h_l >= cnt:
+            self.history.pop(0)
+        self.history.append(val)
 
     @property
     def recording_time(self):

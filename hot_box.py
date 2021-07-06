@@ -24,6 +24,7 @@ class HotBox(object):
         self._hold_timer = None
         self._step_timer = None
         self._heat_timer = None
+        self._record_timer = None
         self._history = []
         self._p_start_time = 0.0
         self._s_start_time = 0.0
@@ -177,7 +178,7 @@ class HotBox(object):
             else:
                 self.heat.force_off()
         self.status.heat_on = self._heat.is_on
-        self.hold_timer = threading.Timer(10, self.hold_step)
+        self.hold_timer = threading.Timer(15, self.hold_step)
         self.hold_timer.start()
 
     def time_in_step(self):
@@ -193,24 +194,31 @@ class HotBox(object):
             return 0
 
     def record(self):
+        self.recording = True
         if not self.recording:
             self.status.history.clear()
             self.r_start_time = time.perf_counter()
-        if self.status.heat_running or self.status.vacuum_running or self.status.prog_running:
-            self.recording = True
-            history = History()
-            status = self.status
-            history.vacuum = status.vacuum_running
-            history.temp = status.temperature
-            history.time = int(time.perf_counter() - self.r_start_time)
-            history.set_temp = status.hold_temperature
-            status.recording_time = history.time
-            status.add_history(history)
-            self.status = status
-            timer = threading.Timer(10, self.record)
-            timer.start()
-        else:
-            self.recording = False
+        history = History()
+        status = self.status
+        history.vacuum = status.vacuum_running
+        history.temp = status.temperature
+        history.time = int(time.perf_counter() - self.r_start_time)
+        history.set_temp = status.hold_temperature
+        status.recording_time = history.time
+        status.add_history(history)
+        self.status = status
+        self.record_timer = threading.Timer(15, self.record)
+        self.record_timer.start()
+
+    def stop_record(self):
+        if self.record_timer is not None:
+            self.record_timer.cancel()
+            self.record_timer = None
+        self.recording = True
+
+    @property
+    def record_timer(self):
+        return self._record_timer
 
     @property
     def hold_timer(self):
@@ -271,6 +279,10 @@ class HotBox(object):
     @property
     def callback(self):
         return self._callback
+
+    @record_timer.setter
+    def record_timer(self, record_timer):
+        self._record_timer = record_timer
 
     @hold_timer.setter
     def hold_timer(self, hold_timer):
