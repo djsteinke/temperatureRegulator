@@ -29,7 +29,7 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-hot_box = HotBox()
+oven = Oven()
 
 
 @app.route('/get/<option>')
@@ -79,8 +79,8 @@ def run():
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
-        if not hot_box.status.prog_running:
-            r = hot_box.start_program(program)
+        if not oven.status.prog_running:
+            r = oven.start_program(program)
             ret['code'] = r[0]
             if r[0] != 200:
                 ret['error'] = r[1]
@@ -90,14 +90,14 @@ def run():
             ret['code'] = 301
             ret['error'] = "Program already running."
     elif tp == "heat" and temp > 0 and time > 0:
-        if not hot_box.status.heat_running:
-            hot_box.heat_on(temp, time*60)
+        if not oven.status.heat_running:
+            oven.start_heat(temp, time*60)
         else:
             ret['code'] = 301
             ret['error'] = "Heat already running."
     elif tp == "vacuum" and time > 0:
-        if not hot_box.status.vacuum_running:
-            hot_box.vacuum_on(time*60)
+        if not oven.status.vacuum_running:
+            oven.vacuum_on(time*60)
         else:
             ret['code'] = 301
             ret['error'] = "Vacuum already running."
@@ -110,11 +110,11 @@ def cancel():
     ret = get_response("cancel")
     ret['value'] = tp
     if tp == "program":
-        hot_box.end_program()
+        oven.end_program()
     elif tp == "heat":
-        hot_box.heat_cancel()
+        oven.stop_heat()
     elif tp == "vacuum":
-        hot_box.vacuum_cancel()
+        oven.vacuum_cancel()
     return ret, 200
 
 
@@ -152,6 +152,6 @@ if __name__ == '__main__':
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
-    hot_box.settings.load()
-    hot_box.record()
+    oven.settings.load()
+    oven.record()
     app.run(host=host_name, port=1983)
