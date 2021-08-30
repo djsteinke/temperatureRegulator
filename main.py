@@ -5,7 +5,7 @@ from flask import Flask, request, send_from_directory
 
 from ComplexEncoder import ComplexEncoder
 from static import get_logging_level
-from hot_box import HotBox
+from oven import Oven
 import json
 import os
 import subprocess
@@ -36,7 +36,7 @@ oven = Oven()
 def get(option):
     if option == "status":
         ret = get_response("status")
-        s_str = json.dumps(hot_box.status.repr_json(), cls=ComplexEncoder)
+        s_str = json.dumps(oven.status.repr_json(), cls=ComplexEncoder)
         s_j = json.loads(s_str)
         ret['status'] = s_j
         return ret, 200
@@ -62,10 +62,10 @@ def upload():
     logger.debug('/upload\n' + json.dumps(x))
     ret = get_response('upload')
     if 'programs' in x:
-        hot_box.settings.process_programs_json(x)
+        oven.settings.process_programs_json(x)
         ret['value'] = 'Programs loaded.'
     else:
-        hot_box.settings.update_program(x)
+        oven.settings.update_program(x)
         ret['value'] = f'Program {x["name"]} loaded.'
     return ret, 200
 
