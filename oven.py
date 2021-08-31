@@ -193,8 +193,8 @@ class Oven(object):
             return 0
 
     def time_in_program(self):
-        if self.p_start_time > 0:
-            return int(time.perf_counter() - self.p_start_time)
+        if self.program_start_time > 0:
+            return int(time.perf_counter() - self.program_start_time)
         else:
             return 0
 
