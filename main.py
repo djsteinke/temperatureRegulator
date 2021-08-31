@@ -79,7 +79,7 @@ def run():
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
-        if not oven.status.prog_running:
+        if not oven.status.program_running:
             r = oven.start_program(program)
             ret['code'] = r[0]
             if r[0] != 200:

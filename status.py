@@ -11,7 +11,7 @@ class Status(object):
         self._heat_running = False
         self._heat_on = False
         self._vacuum_running = False
-        self._running = False
+        self._program_running = False
         self._vacuum_time_remaining = 0
         self._recording_time = 0
         self._history = []
@@ -28,7 +28,7 @@ class Status(object):
                     heatRunning=self.heat_running,
                     heatOn=self.heat_on,
                     vacuumRunning=self.vacuum_running,
-                    programRunning=self.prog_running,
+                    programRunning=self.program_running,
                     vacuumTimeRemaining=self.vacuum_time_remaining,
                     recordingTime=self.recording_time,
                     history=self.history,
@@ -94,8 +94,8 @@ class Status(object):
         return self._vacuum_time_remaining
 
     @property
-    def prog_running(self):
-        return self._running
+    def program_running(self):
+        return self._program_running
 
     @property
     def running(self):
@@ -149,14 +149,14 @@ class Status(object):
     def vacuum_time_remaining(self, value):
         self._vacuum_time_remaining = value
 
-    @prog_running.setter
-    def prog_running(self, value):
-        self._running = value
+    @program_running.setter
+    def program_running(self, value):
+        self._program_running = value
 
     @history.setter
     def history(self, value):
         self._history = value
 
     @running.setter
-    def running(self, running):
-        self._running = running
+    def running(self, value):
+        self._running = value

@@ -107,7 +107,7 @@ class HotBox(object):
                 break
         if found:
             self.p_start_time = time.perf_counter()
-            self.status.prog_running = True
+            self.status.program_running = True
             self.hold_timer = None
             self.run_step()
             if not self.recording:
@@ -123,7 +123,7 @@ class HotBox(object):
         self.status.hold_temperature = 0
         self.status.elapsed_program_time = 0
         self.p_start_time = 0
-        self.status.prog_running = False
+        self.status.program_running = False
         if self.hold_timer is not None:
             self.hold_timer.cancel()
             self.hold_timer = None
@@ -141,7 +141,7 @@ class HotBox(object):
     def run_step(self):
         self.status.step += 1
         self.s_start_time = None
-        if self.status.prog_running and self.status.step < len(self.program.steps):
+        if self.status.program_running and self.status.step < len(self.program.steps):
             found = False
             for obj in self.program.steps:
                 if obj.step == self.status.step:
@@ -157,9 +157,9 @@ class HotBox(object):
                     if obj.vacuum:
                         self.vacuum.run_time = t
                         self.vacuum.on()
-            self.status.prog_running = found
+            self.status.program_running = found
             module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
-            if not self.status.prog_running:
+            if not self.status.program_running:
                 self.end_program()
         else:
             self.end_program()

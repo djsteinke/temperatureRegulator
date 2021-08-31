@@ -106,7 +106,8 @@ class Oven(object):
                 break
         if found:
             self.program_start_time = time.perf_counter()
-            self.status.prog_running = name
+            self.status.program_running = True
+            self.status.running = name
             self.hold_timer = None
             self.run_step()
             if not self.recording:
@@ -123,7 +124,8 @@ class Oven(object):
         self.status.hold_temperature = 0
         self.status.elapsed_program_time = 0
         self.program_start_time = 0
-        self.status.prog_running = False
+        self.status.program_running = False
+        self.status.running = None
         if self.hold_timer is not None:
             self.hold_timer.cancel()
             self.hold_timer = None
@@ -142,7 +144,7 @@ class Oven(object):
         self.status.step += 1
         self.step_start_time = None
         self.status.vacuum_running = False
-        if self.status.prog_running and self.status.step < len(self.program.steps):
+        if self.status.program_running and self.status.step < len(self.program.steps):
             found = False
             for obj in self.program.steps:
                 if obj.step == self.status.step:
@@ -159,9 +161,9 @@ class Oven(object):
                         self.vacuum.run_time = t
                         self.vacuum.on()
                         self.status.vacuum_running = True
-            self.status.prog_running = found
+            self.status.program_running = found
             module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
-            if not self.status.prog_running:
+            if not self.status.program_running:
                 self.end_program()
         else:
             self.end_program()
