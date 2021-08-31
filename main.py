@@ -97,7 +97,7 @@ def run():
             ret['error'] = "Heat already running."
     elif tp == "vacuum" and time > 0:
         if not oven.status.vacuum_running:
-            oven.vacuum_on(time*60)
+            oven.start_vacuum(time*60)
         else:
             ret['code'] = 301
             ret['error'] = "Vacuum already running."

@@ -33,7 +33,6 @@ class Oven(object):
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
         self._recording = False
-        self._running = None
 
     def start(self):
         if not self.recording:
@@ -44,11 +43,10 @@ class Oven(object):
                     stepStartTime=self.step_start_time,
                     recordStartTime=self.record_start_time,
                     status=self.status,
-                    program=self.program,
-                    running=self.running)
+                    program=self.program)
 
     def start_heat(self, temp, run_time):
-        self.running = "heat"
+        self.status.running = "heat"
         self.step_start_time = time.perf_counter()
         self.status.hold_temperature = temp
         if run_time is None or run_time == 0:
@@ -61,7 +59,7 @@ class Oven(object):
         self.heat_timer.start()
 
     def stop_heat(self):
-        self.running = None
+        self.status.running = None
         self.heat.force_off()
         self.heat.run_time = 0
         self.step_start_time = 0
@@ -78,7 +76,7 @@ class Oven(object):
             self.hold_timer = None
 
     def start_vacuum(self, run_time):
-        self.running = "vacuum"
+        self.status.running = "vacuum"
         if run_time is None:
             run_time = 1800
         self.vacuum.run_time = run_time
@@ -90,7 +88,7 @@ class Oven(object):
 
     def stop_vacuum(self):
         module_logger.debug("vacuum_off()")
-        self.running = None
+        self.status.running = None
         self.vacuum.force_off()
         self.vacuum.run_time = 0
         self.status.vacuum_time_remaining = 0
@@ -98,7 +96,7 @@ class Oven(object):
 
     def start_program(self, name):
         module_logger.info(f"Program.run({name})")
-        self.running = "program"
+        self.status.running = "program"
         found = False
         for p in self.settings.programs:
             print(p.name)
@@ -120,7 +118,7 @@ class Oven(object):
             return [400, f"Program {name} Not Found"]
 
     def end_program(self):
-        self.running = None
+        self.status.running = None
         self.status.step = -1
         self.status.hold_temperature = 0
         self.status.elapsed_program_time = 0
@@ -285,10 +283,6 @@ class Oven(object):
     def callback(self):
         return self._callback
 
-    @property
-    def running(self):
-        return self._running
-
     @record_timer.setter
     def record_timer(self, record_timer):
         self._record_timer = record_timer
@@ -348,7 +342,3 @@ class Oven(object):
     @callback.setter
     def callback(self, callback):
         self._callback = callback
-
-    @running.setter
-    def running(self, running):
-        self._running = running

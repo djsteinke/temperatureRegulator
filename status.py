@@ -15,6 +15,7 @@ class Status(object):
         self._vacuum_time_remaining = 0
         self._recording_time = 0
         self._history = []
+        self._running = None
 
     def repr_json(self):
         return dict(humidity=self.humidity,
@@ -30,7 +31,8 @@ class Status(object):
                     programRunning=self.prog_running,
                     vacuumTimeRemaining=self.vacuum_time_remaining,
                     recordingTime=self.recording_time,
-                    history=self.history)
+                    history=self.history,
+                    running=self.running)
 
     def add_history(self, val):
         cnt = 60*4
@@ -95,6 +97,10 @@ class Status(object):
     def prog_running(self):
         return self._running
 
+    @property
+    def running(self):
+        return self._running
+
     @recording_time.setter
     def recording_time(self, value):
         self._recording_time = value
@@ -150,3 +156,7 @@ class Status(object):
     @history.setter
     def history(self, value):
         self._history = value
+
+    @running.setter
+    def running(self, running):
+        self._running = running
