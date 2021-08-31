@@ -14,7 +14,7 @@ from define.program import Program
 
 module_logger = logging.getLogger('main.oven')
 max_temp_c = 72
-
+interval = 15
 
 class Oven(object):
     def __init__(self):
@@ -34,6 +34,10 @@ class Oven(object):
         self._callback = None
         self._recording = False
         self._running = None
+
+    def start(self):
+        if not self.recording:
+            self.record()
 
     def repr_json(self):
         return dict(programStartTime=self.program_start_time,
@@ -179,7 +183,7 @@ class Oven(object):
             else:
                 self.heat.force_off()
         self.status.heat_on = self._heat.is_on
-        self.hold_timer = threading.Timer(15, self.hold_step)
+        self.hold_timer = threading.Timer(interval, self.hold_step)
         self.hold_timer.start()
 
     def time_in_step(self):
@@ -208,7 +212,7 @@ class Oven(object):
         status.recording_time = history.time
         status.add_history(history)
         self.status = status
-        self.record_timer = threading.Timer(15, self.record)
+        self.record_timer = threading.Timer(interval, self.record)
         self.record_timer.start()
 
     def stop_record(self):

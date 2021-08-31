@@ -153,5 +153,5 @@ if __name__ == '__main__':
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
     oven.settings.load()
-    oven.record()
+    oven.start()
     app.run(host=host_name, port=1983)
