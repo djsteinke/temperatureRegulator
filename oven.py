@@ -106,7 +106,7 @@ class Oven(object):
                 break
         if found:
             self.program_start_time = time.perf_counter()
-            self.status.prog_running = True
+            self.status.prog_running = name
             self.hold_timer = None
             self.run_step()
             if not self.recording:
