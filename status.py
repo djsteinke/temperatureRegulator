@@ -39,6 +39,7 @@ class Status(object):
         h_l = len(self.history)
         while h_l >= cnt:
             self.history.pop(0)
+            h_l = len(self.history)
         self.history.append(val)
 
     @property
