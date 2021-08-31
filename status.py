@@ -38,7 +38,7 @@ class Status(object):
         cnt = 60*4
         self.history.append(val)
         h_l = len(self.history)
-        while h_l >= cnt:
+        while h_l > cnt:
             self.history.pop(0)
             h_l = len(self.history)
 
