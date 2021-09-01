@@ -5,7 +5,7 @@ from flask import Flask, request, send_from_directory
 
 from ComplexEncoder import ComplexEncoder
 from static import get_logging_level
-from oven import Oven
+from hotbox import Hotbox
 import json
 import os
 import subprocess
@@ -29,14 +29,14 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-oven = Oven()
+hotbox = Hotbox()
 
 
 @app.route('/get/<option>')
 def get(option):
     if option == "status":
         ret = get_response("status")
-        s_str = json.dumps(oven.status.repr_json(), cls=ComplexEncoder)
+        s_str = json.dumps(hotbox.status.repr_json(), cls=ComplexEncoder)
         s_j = json.loads(s_str)
         ret['status'] = s_j
         return ret, 200
@@ -62,10 +62,10 @@ def upload():
     logger.debug('/upload\n' + json.dumps(x))
     ret = get_response('upload')
     if 'programs' in x:
-        oven.settings.process_programs_json(x)
+        hotbox.settings.process_programs_json(x)
         ret['value'] = 'Programs loaded.'
     else:
-        oven.settings.update_program(x)
+        hotbox.settings.update_program(x)
         ret['value'] = f'Program {x["name"]} loaded.'
     return ret, 200
 
@@ -79,8 +79,8 @@ def run():
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
-        if not oven.status.program_running:
-            r = oven.start_program(program)
+        if not hotbox.status.program_running:
+            r = hotbox.start_program(program)
             ret['code'] = r[0]
             if r[0] != 200:
                 ret['error'] = r[1]
@@ -90,14 +90,14 @@ def run():
             ret['code'] = 301
             ret['error'] = "Program already running."
     elif tp == "heat" and temp > 0 and time > 0:
-        if not oven.status.heat_running:
-            oven.start_heat(temp, time*60)
+        if not hotbox.status.heat_running:
+            hotbox.start_heat(temp, time * 60)
         else:
             ret['code'] = 301
             ret['error'] = "Heat already running."
     elif tp == "vacuum" and time > 0:
-        if not oven.status.vacuum_running:
-            oven.start_vacuum(time*60)
+        if not hotbox.status.vacuum_running:
+            hotbox.start_vacuum(time * 60)
         else:
             ret['code'] = 301
             ret['error'] = "Vacuum already running."
@@ -110,11 +110,11 @@ def cancel():
     ret = get_response("cancel")
     ret['value'] = tp
     if tp == "program":
-        oven.end_program()
+        hotbox.end_program()
     elif tp == "heat":
-        oven.stop_heat()
+        hotbox.stop_heat()
     elif tp == "vacuum":
-        oven.vacuum_cancel()
+        hotbox.stop_vacuum()
     return ret, 200
 
 
@@ -152,6 +152,6 @@ if __name__ == '__main__':
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
-    oven.settings.load()
-    oven.start()
+    hotbox.settings.load()
+    hotbox.start()
     app.run(host=host_name, port=1983)
