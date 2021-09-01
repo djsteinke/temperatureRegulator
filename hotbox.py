@@ -12,7 +12,7 @@ from history import History
 from settings import Settings
 from define.program import Program
 
-module_logger = logging.getLogger('main.oven')
+module_logger = logging.getLogger('main.hotbox')
 max_temp_c = 72
 interval = 15
 
