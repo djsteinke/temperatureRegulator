@@ -81,7 +81,7 @@ class Hotbox(object):
         if run_time is None:
             run_time = 1800
         self.vacuum.run_time = run_time
-        self.vacuum.callback = self.vacuum_off
+        self.vacuum.callback = self.stop_vacuum
         self.vacuum.on()
         self.status.vacuum_running = True
         if not self.recording:
@@ -110,7 +110,7 @@ class Hotbox(object):
             self.status.program_running = True
             self.status.running = name
             self.hold_timer = None
-            self.run_step()
+            threading.Thread(self.run_step())
             if not self.recording:
                 self.record()
             module_logger.info(f"Program {name} Started")
