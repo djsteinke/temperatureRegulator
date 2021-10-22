@@ -110,7 +110,7 @@ class Hotbox(object):
             self.status.program_running = True
             self.status.running = name
             self.hold_timer = None
-            threading.Timer(1, self.run_step)
+            threading.Timer(1, self.run_step).start()
             if not self.recording:
                 self.record()
             module_logger.info(f"Program {name} Started")
