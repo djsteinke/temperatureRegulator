@@ -170,7 +170,6 @@ class Hotbox(object):
                         self.vacuum.run_time = t
                         if not self.vacuum.is_on:
                             self.vacuum.on()
-                        self.status.vacuum_running = True
                         self.status.vacuum_on = True
             self.status.program_running = found
             module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
