@@ -85,6 +85,7 @@ class Hotbox(object):
         self.vacuum.run_time = run_time
         self.vacuum.callback = self.stop_vacuum
         self.vacuum.on()
+        self.status.vacuum_running = True
         self.status.vacuum_on = True
         self.status.vacuum_time_remaining = run_time
         if not self.recording:
@@ -92,6 +93,7 @@ class Hotbox(object):
 
     def stop_vacuum(self):
         module_logger.debug("stop_vacuum()")
+        self.status.vacuum_running = False
         self.vacuum.force_off()
         self.status.vacuum_time_remaining = 0
         self.status.vacuum_on = self.vacuum.is_on
@@ -107,6 +109,9 @@ class Hotbox(object):
                 found = True
                 break
         if found:
+            if self.heat_timer is not None:
+                self.stop_heat()
+            self.status.vacuum_running = False
             self.program_start_time = time.perf_counter()
             self.status.program_running = True
             self.status.running = name
@@ -119,33 +124,6 @@ class Hotbox(object):
         else:
             module_logger.error(f"Program {name} Not Found")
             return [400, f"Program {name} Not Found"]
-
-    def run_step(self):
-        self.status.step += 1
-        self.step_start_time = None
-        self.status.vacuum_running = False
-        if self.status.program_running and self.status.step < len(self.program.steps):
-            found = False
-            for obj in self.program.steps:
-                if obj.step == self.status.step:
-                    found = True
-                    self.step_start_time = time.perf_counter()
-                    t = obj.time*60
-                    self.start_heat(float(obj.temperature), t)
-                    self.step_timer = threading.Timer(t, self.run_step)
-                    self.step_timer.start()
-                    if obj.vacuum:
-                        self.vacuum.run_time = t
-                        if not self.vacuum.is_on:
-                            self.vacuum.on()
-                        self.status.vacuum_running = True
-                        self.status.vacuum_on = True
-            self.status.program_running = found
-            module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
-            if not self.status.program_running:
-                self.end_program()
-        else:
-            self.end_program()
 
     def end_program(self):
         self.status.running = None
@@ -168,6 +146,38 @@ class Hotbox(object):
         module_logger.info(f"Program Ended")
         if self.callback is not None:
             self.callback()
+
+    def run_step(self):
+        self.status.step += 1
+        self.step_start_time = None
+        self.status.vacuum_running = False
+        if self.status.program_running and self.status.step < len(self.program.steps):
+            found = False
+            for obj in self.program.steps:
+                if obj.step == self.status.step:
+                    found = True
+                    self.step_start_time = time.perf_counter()
+                    t = obj.time*60
+                    self.status.hold_temperature = float(obj.temperature)
+                    self.status.step_time = t
+                    if self.hold_timer is not None:
+                        self.hold_timer.cancel()
+                        self.hold_timer = None
+                    self.hold_step()
+                    self.step_timer = threading.Timer(t, self.run_step)
+                    self.step_timer.start()
+                    if obj.vacuum:
+                        self.vacuum.run_time = t
+                        if not self.vacuum.is_on:
+                            self.vacuum.on()
+                        self.status.vacuum_running = True
+                        self.status.vacuum_on = True
+            self.status.program_running = found
+            module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
+            if not self.status.program_running:
+                self.end_program()
+        else:
+            self.end_program()
 
     def hold_step(self):
         t = get_temp()
