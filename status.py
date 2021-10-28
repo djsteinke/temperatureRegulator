@@ -8,8 +8,9 @@ class Status(object):
         self._step_time = 0
         self._elapsed_program_time = 0
         self._elapsed_step_time = 0
-        self._heat_running = False
         self._heat_on = False
+        self._vacuum_on = False
+        self._heat_running = False
         self._vacuum_running = False
         self._program_running = False
         self._vacuum_time_remaining = 0
@@ -27,6 +28,7 @@ class Status(object):
                     elapsedStepTime=self.elapsed_step_time,
                     heatRunning=self.heat_running,
                     heatOn=self.heat_on,
+                    vacuumOn=self.vacuum_on,
                     vacuumRunning=self.vacuum_running,
                     programRunning=self.program_running,
                     vacuumTimeRemaining=self.vacuum_time_remaining,
@@ -102,6 +104,10 @@ class Status(object):
     def running(self):
         return self._running
 
+    @property
+    def vacuum_on(self):
+        return self._vacuum_on
+
     @recording_time.setter
     def recording_time(self, value):
         self._recording_time = value
@@ -161,3 +167,7 @@ class Status(object):
     @running.setter
     def running(self, value):
         self._running = value
+
+    @vacuum_on.setter
+    def vacuum_on(self, value):
+        self._vacuum_on = value

@@ -17,6 +17,7 @@ class Relay(object):
         self._gpio_on = GPIO.HIGH
         self._gpio_off = GPIO.LOW
         self._start_time = 0
+        self._off_timer = None
         self.setup_pin()
 
     def on(self):
@@ -26,10 +27,14 @@ class Relay(object):
             self._on = True
             self._start_time = time.perf_counter()
             GPIO.output(self._pin, self._gpio_on)
-            timer = threading.Timer(self._run_time, self.off)
-            timer.start()
+            if self._off_timer is None:
+                self._off_timer = threading.Timer(self._run_time, self.off)
+                self._off_timer.start()
 
     def force_off(self):
+        if self._off_timer is not None:
+            self._off_timer.cancel()
+        self._run_time = 0
         self._wait = 0
         self.off()
 
@@ -87,6 +92,10 @@ class Relay(object):
     @run_time.setter
     def run_time(self, value):
         self._run_time = value
+        if self._off_timer is not None:
+            self._off_timer.cancel()
+            self._off_timer = threading.Timer(self._run_time, self.off)
+            self._off_timer.start()
 
     @wait.setter
     def wait(self, value):

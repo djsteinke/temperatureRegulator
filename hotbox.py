@@ -27,6 +27,8 @@ class Hotbox(object):
         self._heat_timer = None
         self._record_timer = None
         self._history = []
+        self._lamp_on_time = 0
+        self._lamp_on_temp = 0
         self._program_start_time = 0.0
         self._step_start_time = 0.0
         self._record_start_time = 0.0
@@ -47,22 +49,22 @@ class Hotbox(object):
                     program=self.program)
 
     def start_heat(self, temp, run_time):
-        self.status.running = "heat"
         self.step_start_time = time.perf_counter()
-        self.status.hold_temperature = temp
         if run_time is None or run_time == 0:
-            run_time = 900
+            run_time = 1800
+        self.status.hold_temperature = temp
         self.status.step_time = run_time
         self.hold_step()
         self.status.heat_running = True
         self.status.heat_on = self.heat.is_on
+        if self.heat_timer is not None:
+            self.heat_timer.cancel()
+            self.heat_timer = None
         self.heat_timer = threading.Timer(run_time, self.stop_heat)
         self.heat_timer.start()
 
     def stop_heat(self):
-        self.status.running = None
         self.heat.force_off()
-        self.heat.run_time = 0
         self.step_start_time = 0
         self.status.step_time = 0
         self.status.hold_temperature = 0
@@ -77,23 +79,22 @@ class Hotbox(object):
             self.hold_timer = None
 
     def start_vacuum(self, run_time):
-        self.status.running = "vacuum"
+        module_logger.debug(f'start_vacuum({str(run_time)})')
         if run_time is None:
             run_time = 1800
         self.vacuum.run_time = run_time
         self.vacuum.callback = self.stop_vacuum
         self.vacuum.on()
-        self.status.vacuum_running = True
+        self.status.vacuum_on = True
+        self.status.vacuum_time_remaining = run_time
         if not self.recording:
             self.record()
 
     def stop_vacuum(self):
-        module_logger.debug("vacuum_off()")
-        self.status.running = None
+        module_logger.debug("stop_vacuum()")
         self.vacuum.force_off()
-        self.vacuum.run_time = 0
         self.status.vacuum_time_remaining = 0
-        self.status.vacuum_running = self.vacuum.is_on
+        self.status.vacuum_on = self.vacuum.is_on
 
     def start_program(self, name):
         module_logger.info(f"Program.run({name})")
@@ -119,6 +120,33 @@ class Hotbox(object):
             module_logger.error(f"Program {name} Not Found")
             return [400, f"Program {name} Not Found"]
 
+    def run_step(self):
+        self.status.step += 1
+        self.step_start_time = None
+        self.status.vacuum_running = False
+        if self.status.program_running and self.status.step < len(self.program.steps):
+            found = False
+            for obj in self.program.steps:
+                if obj.step == self.status.step:
+                    found = True
+                    self.step_start_time = time.perf_counter()
+                    t = obj.time*60
+                    self.start_heat(float(obj.temperature), t)
+                    self.step_timer = threading.Timer(t, self.run_step)
+                    self.step_timer.start()
+                    if obj.vacuum:
+                        self.vacuum.run_time = t
+                        if not self.vacuum.is_on:
+                            self.vacuum.on()
+                        self.status.vacuum_running = True
+                        self.status.vacuum_on = True
+            self.status.program_running = found
+            module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
+            if not self.status.program_running:
+                self.end_program()
+        else:
+            self.end_program()
+
     def end_program(self):
         self.status.running = None
         self.status.step = -1
@@ -135,42 +163,25 @@ class Hotbox(object):
             self.step_timer = None
         self.heat.force_off()
         self.vacuum.force_off()
-        self.status.heat_running = self.heat.is_on
-        self.status.vacuum_running = self.vacuum.is_on
+        self.status.heat_on = self.heat.is_on
+        self.status.vacuum_on = self.vacuum.is_on
         module_logger.info(f"Program Ended")
         if self.callback is not None:
             self.callback()
 
-    def run_step(self):
-        self.status.step += 1
-        self.step_start_time = None
-        self.status.vacuum_running = False
-        if self.status.program_running and self.status.step < len(self.program.steps):
-            found = False
-            for obj in self.program.steps:
-                if obj.step == self.status.step:
-                    found = True
-                    self.step_start_time = time.perf_counter()
-                    self.status.hold_temperature = float(obj.temperature)
-                    t = obj.time*60
-                    self.status.step_time = t
-                    self.step_timer = threading.Timer(t, self.run_step)
-                    self.step_timer.start()
-                    if self.hold_timer is None:
-                        self.hold_step()
-                    if obj.vacuum:
-                        self.vacuum.run_time = t
-                        self.vacuum.on()
-                        self.status.vacuum_running = True
-            self.status.program_running = found
-            module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
-            if not self.status.program_running:
-                self.end_program()
-        else:
-            self.end_program()
-
     def hold_step(self):
         t = get_temp()
+        if self.heat.is_on:
+            if self._lamp_on_temp == 0:
+                self._lamp_on_temp = t[0]
+            self._lamp_on_time = self._lamp_on_time + interval
+        else:
+            self._lamp_on_time = 0
+            self._lamp_on_temp = 0
+        if self._lamp_on_time >= 300 and t[0] <= self._lamp_on_temp + 5:
+            temp_change = t[0] - self._lamp_on_temp
+            module_logger.error(f'EMERGENCY STOP PROGRAM. 5 min temp change {temp_change} deg C.')
+            self.end_program()
         self.status.temperature = t[0]
         self.status.humidity = t[1]
         self.status.elapsed_step_time = self.time_in_step()
@@ -206,10 +217,11 @@ class Hotbox(object):
             self.record_start_time = time.perf_counter()
         history = History()
         status = self.status
-        history.vacuum = status.vacuum_running
+        history.heat = self.heat.is_on
+        history.vacuum = self.vacuum.is_on
         history.temp = status.temperature
         history.time = int(time.perf_counter() - self.record_start_time)
-        history.set_temp = status.hold_temperature
+        history.target_temp = status.hold_temperature
         status.recording_time = history.time
         status.add_history(history)
         self.status = status
@@ -217,10 +229,10 @@ class Hotbox(object):
         self.record_timer.start()
 
     def stop_record(self):
+        self.recording = False
         if self.record_timer is not None:
             self.record_timer.cancel()
             self.record_timer = None
-        self.recording = True
 
     @property
     def record_timer(self):
