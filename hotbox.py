@@ -36,6 +36,7 @@ class Hotbox(object):
         self._vacuum = Relay(vacuum_pin)
         self._callback = None
         self._recording = False
+        self._last_temp = 0.0
 
     def start(self):
         if not self.recording:
@@ -198,16 +199,16 @@ class Hotbox(object):
         if self.vacuum.is_on:
             self.status.vacuum_time_remaining = self.vacuum.run_time-self.vacuum.on_time()
         if self.status.hold_temperature > 0:
-            t_h = self.status.hold_temperature + 1.5
-            t_l = self.status.hold_temperature - 1.5
-            off = True
-            if self.status.temperature < max_temp_c:
-                if t_l < self.status.temperature < t_h:
-                    off = False
-                    if not self.heat.is_on:
-                        self.heat.on()
-            if off:
+            t_h = self.status.hold_temperature + 1.0
+            t_l = self.status.hold_temperature - 1.0
+            t = self.status.temperature
+            if t > max_temp_c:
                 self.heat.force_off()
+            else:
+                if t > t_h:
+                    self.heat.force_off()
+                elif t < t_l and not self.heat.is_on:
+                    self.heat.on()
         self.status.heat_on = self._heat.is_on
         self.hold_timer = threading.Timer(interval, self.hold_step)
         self.hold_timer.start()
