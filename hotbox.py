@@ -198,10 +198,15 @@ class Hotbox(object):
         if self.vacuum.is_on:
             self.status.vacuum_time_remaining = self.vacuum.run_time-self.vacuum.on_time()
         if self.status.hold_temperature > 0:
-            if self.status.temperature <= self.status.hold_temperature and self.status.temperature < max_temp_c:
-                if not self.heat.is_on:
-                    self.heat.on()
-            else:
+            t_h = self.status.hold_temperature + 1.5
+            t_l = self.status.hold_temperature - 1.5
+            off = True
+            if self.status.temperature < max_temp_c:
+                if t_l < self.status.temperature < t_h:
+                    off = False
+                    if not self.heat.is_on:
+                        self.heat.on()
+            if off:
                 self.heat.force_off()
         self.status.heat_on = self._heat.is_on
         self.hold_timer = threading.Timer(interval, self.hold_step)
