@@ -9,6 +9,7 @@ from hotbox import Hotbox
 import json
 import os
 import subprocess
+import firebase_db
 
 app = Flask(__name__)
 
@@ -154,4 +155,6 @@ if __name__ == '__main__':
     logger.info("app host_name[" + host_name + "]")
     hotbox.settings.load()
     hotbox.start()
+    db = firebase_db.FirebaseDb()
+    db.programs
     app.run(host=host_name, port=1983)
