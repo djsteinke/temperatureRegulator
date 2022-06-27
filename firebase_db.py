@@ -17,6 +17,7 @@ class FirebaseDb(object):
 	def __init__(self):
 		self._programs = ref.get("programs")
 		self._history = None
+		print(self._programs)
 
 	@property
 	def programs(self):
