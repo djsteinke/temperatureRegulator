@@ -6,7 +6,6 @@ import json
 from ComplexEncoder import ComplexEncoder
 from static import get_temp
 from relay import Relay
-from status import Status
 from history import History
 from define.program import Program
 import firebase_db
@@ -21,7 +20,6 @@ vacuum_pin = 30
 
 class Hotbox(object):
     def __init__(self):
-        self._status = Status()
         self._program = Program()
         self._hold_timer = None
         self._step_timer = None
@@ -54,12 +52,8 @@ class Hotbox(object):
         self.step_start_time = time.perf_counter()
         if run_time is None or run_time == 0:
             run_time = 1800
-        self.status.hold_temperature = temp
-        self.status.step_time = run_time
         self.hold_step()
-        self.status.heat_running = True
-        self.status.lamp_on = self.heat.is_on
-        firebase_db.heat(self.status)
+        firebase_db.heat(temp, run_time)
         if self.heat_timer is not None:
             self.heat_timer.cancel()
             self.heat_timer = None
@@ -67,14 +61,10 @@ class Hotbox(object):
         self.heat_timer.start()
 
     def stop_heat(self):
-        self.heat.force_off()
+        self.lamp_relay.force_off()
+        firebase_db.lamp_on(False)
         self.step_start_time = 0
-        self.status.step_time = 0
-        self.status.hold_temperature = 0
-        self.status.elapsed_step_time = 0
-        self.status.heat_running = False
-        self.status.lamp_on = self.heat.is_on
-        firebase_db.heat(self.status)
+        firebase_db.heat()
         if self.heat_timer is not None:
             self.heat_timer.cancel()
             self.heat_timer = None
@@ -86,23 +76,19 @@ class Hotbox(object):
         module_logger.debug(f'start_vacuum({str(run_time)})')
         if run_time is None:
             run_time = 1800
-        self.vacuum.run_time = run_time
-        self.vacuum.callback = self.stop_vacuum
-        self.vacuum.on()
-        self.status.vacuum_running = True
-        self.status.pump_on = True
-        self.status.vacuum_time_remaining = run_time
-        firebase_db.heat(self.status)
+        self.pump_relay.run_time = run_time
+        self.pump_relay.callback = self.stop_vacuum
+        self.pump_relay.on()
+        firebase_db.pump_on(True)
+        firebase_db.vacuum(run_time)
         if not self.recording:
             self.record()
 
     def stop_vacuum(self):
         module_logger.debug("stop_vacuum()")
-        self.status.vacuum_running = False
-        self.vacuum.force_off()
-        self.status.vacuum_time_remaining = 0
-        self.status.pump_on = self.vacuum.is_on
-        firebase_db.heat(self.status)
+        self.pump_relay.force_off()
+        firebase_db.pump_on(False)
+        firebase_db.vacuum()
 
     def start_program(self, name):
         module_logger.info(f"Program.run({name})")
@@ -145,18 +131,16 @@ class Hotbox(object):
         if self.step_timer is not None:
             self.step_timer.cancel()
             self.step_timer = None
-        self.heat.force_off()
-        self.vacuum.force_off()
-        self.status.lamp_on = self.heat.is_on
-        self.status.pump_on = self.vacuum.is_on
+        self.lamp_relay.force_off()
+        self.pump_relay.force_off()
+        self.status.lamp_on = self.lamp_relay.is_on
+        self.status.pump_on = self.pump_relay.is_on
         module_logger.info(f"Program Ended")
         if self.callback is not None:
             self.callback()
 
     def run_step(self):
-        self.status.step += 1
         self.step_start_time = None
-        self.status.vacuum_running = False
         if self.status.program_running and self.status.step < len(self.program.steps):
             found = False
             for obj in self.program.steps:
@@ -173,9 +157,9 @@ class Hotbox(object):
                     self.step_timer = threading.Timer(t, self.run_step)
                     self.step_timer.start()
                     if obj.pump_on:
-                        self.vacuum.run_time = t
-                        if not self.vacuum.is_on:
-                            self.vacuum.on()
+                        self.pump_relay.run_time = t
+                        if not self.pump_relay.is_on:
+                            self.pump_relay.on()
                         self.status.pump_on = True
             self.status.program_running = found
             module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
@@ -186,7 +170,7 @@ class Hotbox(object):
 
     def hold_step(self):
         t = get_temp()
-        if self.heat.is_on:
+        if self.lamp_relay.is_on:
             if self._lamp_on_temp == 0:
                 self._lamp_on_temp = t[0]
             self._lamp_on_time = self._lamp_on_time + interval
@@ -197,38 +181,23 @@ class Hotbox(object):
             temp_change = t[0] - self._lamp_on_temp
             module_logger.error(f'EMERGENCY STOP PROGRAM. 5 min temp change {temp_change} deg C.')
             self.end_program()
-        self.status.temperature = t[0]
-        self.status.humidity = t[1]
-        self.status.elapsed_step_time = self.time_in_step()
-        self.status.elapsed_program_time = self.time_in_program()
-        if self.vacuum.is_on:
-            self.status.vacuum_time_remaining = self.vacuum.run_time-self.vacuum.on_time()
+        firebase_db.temperature(t[0])
+        firebase_db.humidity(t[1])
         if self.status.hold_temperature > 0:
             t_h = self.status.hold_temperature + 1.0
             t_l = self.status.hold_temperature - 1.0
             t = self.status.temperature
             if t > max_temp_c:
-                self.heat.force_off()
+                self.lamp_relay.force_off()
             else:
                 if t > t_h:
-                    self.heat.force_off()
-                elif t < t_l and not self.heat.is_on:
-                    self.heat.on()
-        self.status.lamp_on = self._lamp_relay.is_on
+                    self.lamp_relay.force_off()
+                elif t < t_l and not self.lamp_relay.is_on:
+                    self.lamp_relay.on()
+            firebase_db.lamp_on(self.lamp_relay.is_on)
+        self.status.lamp_on = self.lamp_relay.is_on
         self.hold_timer = threading.Timer(interval, self.hold_step)
         self.hold_timer.start()
-
-    def time_in_step(self):
-        if self.step_start_time > 0:
-            return int(time.perf_counter() - self.step_start_time)
-        else:
-            return 0
-
-    def time_in_program(self):
-        if self.program_start_time > 0:
-            return int(time.perf_counter() - self.program_start_time)
-        else:
-            return 0
 
     def record(self):
         self.recording = True
@@ -237,8 +206,8 @@ class Hotbox(object):
             self.record_start_time = time.perf_counter()
         history = History()
         status = self.status
-        history.heat = self.heat.is_on
-        history.vacuum = self.vacuum.is_on
+        history.heat = self.lamp_relay.is_on
+        history.vacuum = self.pump_relay.is_on
         history.temp = status.temperature
         history.time = int(time.perf_counter() - self.record_start_time)
         history.target_temp = status.hold_temperature
@@ -287,11 +256,11 @@ class Hotbox(object):
         return self._record_start_time
 
     @property
-    def heat(self):
+    def lamp_relay(self):
         return self._lamp_relay
 
     @property
-    def vacuum(self):
+    def pump_relay(self):
         return self._pump_relay
 
     @property
@@ -301,18 +270,6 @@ class Hotbox(object):
     @property
     def program(self):
         return self._program
-
-    @property
-    def settings(self):
-        return self._settings
-
-    @property
-    def status(self):
-        if self.hold_timer is None:
-            r = get_temp()
-            self._status.temperature = r[0]
-            self._status.humidity = r[1]
-        return self._status
 
     @property
     def callback(self):
@@ -350,12 +307,12 @@ class Hotbox(object):
     def record_start_time(self, record_start_time):
         self._record_start_time = record_start_time
 
-    @heat.setter
-    def heat(self, heat):
+    @lamp_relay.setter
+    def lamp_relay(self, heat):
         self._lamp_relay = heat
 
-    @vacuum.setter
-    def vacuum(self, vacuum):
+    @pump_relay.setter
+    def pump_relay(self, vacuum):
         self._pump_relay = vacuum
 
     @recording.setter
@@ -365,14 +322,6 @@ class Hotbox(object):
     @program.setter
     def program(self, program):
         self._program = program
-
-    @settings.setter
-    def settings(self, settings):
-        self._settings = settings
-
-    @status.setter
-    def status(self, status):
-        self._status = status
 
     @callback.setter
     def callback(self, callback):

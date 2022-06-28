@@ -153,6 +153,6 @@ if __name__ == '__main__':
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
-    hotbox.settings.load()
     hotbox.start()
+    print(f"temp[{firebase_db.temperature()}]")
     app.run(host=host_name, port=1983)

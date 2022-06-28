@@ -1,6 +1,6 @@
 import firebase_admin
 from firebase_admin import db
-from os import getcwd
+import time
 
 databaseURL = "https://rn5notifications-default-rtdb.firebaseio.com/"
 appKey = "tempReg"
@@ -10,41 +10,70 @@ default_app = firebase_admin.initialize_app(cred_obj, {
     'databaseURL': databaseURL
 })
 
-ref = db.reference("/" + appKey)
+ref = db.reference(appKey + "/status")
+status = ref.get()
 
 
-def lamp_on(on):
-    ref.get("status")
-    ref.child("lampOn").set(on)
+def temperature(t=-100):
+    if t > -100:
+        status['temperature'] = t
+        ref.set(status)
+    else:
+        t = status['temperature']
+    return t
 
 
-def pump_on(on):
-    ref.get("status")
-    ref.child("pumpOn").set(on)
+def humidity(h=-1):
+    if h > -100:
+        status.child("humidity").set(h)
+    else:
+        h = status.child("humidity").get()
+    return h
+
+
+def hold_temp():
+    h = status.child("heat")
+    t = h.child("tempSet").get()
+
+
+def lamp_on(on=None):
+    if on is not None and status.child("lampOn").get() != on:
+        status.child("lampOn").set(on)
+    else:
+        on = status.child("lampOn").get()
+    return on
+
+
+def pump_on(on=None):
+    if on is not None and status.child("pumpOn").get() != on:
+        status.child("pumpOn").set(on)
+    else:
+        on = status.child("pumpOn").get()
+    return on
 
 
 def get_programs():
     return ref.get("programs")
 
 
-def heat(status):
-    ref.get("status/heat")
-    if status.heat_running:
-        ref.child("startTime").set()
-        ref.child("endTime").set()
-        ref.child("tempSet").set(status.hold_temperature)
-        ref.child("timeSet").set(status.step_time)
+def heat(run_time=-1, hold_t=-1):
+    h = status.child("heat")
+    if run_time > 0:
+        h.child("startTime").set(int(time.time()))
+        h.child("endTime").set(int(time.time()) + run_time)
+        h.child("tempSet").set(hold_t)
+        h.child("timeSet").set(run_time)
     else:
-        ref.set({})
+        h.set({})
 
 
-def vacuum(status):
-    ref.get("status/vacuum")
-    if status.vacuum_running:
-        ref.child("startTime").set()
-        ref.child("endTime").set()
-        ref.child("time").set(status.vacuum_time_remaining)
+def vacuum(run_time=-1):
+    v = status.child("vacuum")
+    if run_time > 0:
+        v.child("startTime").set(time.time())
+        v.child("endTime").set(int(time.time()) + run_time)
+        v.child("time").set(run_time)
     else:
-        ref.set({})
+        v.set({})
 
 
