@@ -15,7 +15,7 @@ status = ref.get()
 
 
 def temperature(t=-100):
-    if t > -100:
+    if -100 < t != status['temperature']:
         status['temperature'] = t
         ref.set(status)
     else:
@@ -24,16 +24,21 @@ def temperature(t=-100):
 
 
 def humidity(h=-1):
-    if h > -100:
-        status.child("humidity").set(h)
+    if -1 < h != status['humidity']:
+        status['humidity'] = h
+        ref.set(status)
     else:
-        h = status.child("humidity").get()
+        h = status['humidity']
     return h
 
 
 def hold_temp():
-    h = status.child("heat")
-    t = h.child("tempSet").get()
+    if "heat" in status:
+        return status['heat']['tempSet']
+    elif "program" in status:
+        return status['program']['tempSet']
+    else:
+        return -1
 
 
 def lamp_on(on=None):
