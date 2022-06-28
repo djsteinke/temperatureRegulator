@@ -13,24 +13,38 @@ default_app = firebase_admin.initialize_app(cred_obj, {
 ref = db.reference("/" + appKey)
 
 
-def heat(on):
+def lamp_on(on):
     ref.get("status")
-    ref.child("heatOn").set(on)
+    ref.child("lampOn").set(on)
 
 
-def vacuum(on):
+def pump_on(on):
     ref.get("status")
-    ref.child("vacuumOn").set(on)
+    ref.child("pumpOn").set(on)
 
 
-class FirebaseDb(object):
-    def __init__(self):
-        self._programs = ref.get("programs")
-        self._history = None
-        print(self._programs)
+def get_programs():
+    return ref.get("programs")
 
-    @property
-    def programs(self):
-        self._programs = ref.get("programs")
-        print(self._programs)
-        return self._programs
+
+def heat(status):
+    ref.get("status/heat")
+    if status.heat_running:
+        ref.child("startTime").set()
+        ref.child("endTime").set()
+        ref.child("tempSet").set(status.hold_temperature)
+        ref.child("timeSet").set(status.step_time)
+    else:
+        ref.set({})
+
+
+def vacuum(status):
+    ref.get("status/vacuum")
+    if status.vacuum_running:
+        ref.child("startTime").set()
+        ref.child("endTime").set()
+        ref.child("time").set(status.vacuum_time_remaining)
+    else:
+        ref.set({})
+
+

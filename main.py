@@ -155,6 +155,4 @@ if __name__ == '__main__':
     logger.info("app host_name[" + host_name + "]")
     hotbox.settings.load()
     hotbox.start()
-    db = firebase_db.FirebaseDb()
-    firebase_db.heat(True)
     app.run(host=host_name, port=1983)

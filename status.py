@@ -8,8 +8,8 @@ class Status(object):
         self._step_time = 0
         self._elapsed_program_time = 0
         self._elapsed_step_time = 0
-        self._heat_on = False
-        self._vacuum_on = False
+        self._lamp_on = False
+        self._pump_on = False
         self._heat_running = False
         self._vacuum_running = False
         self._program_running = False
@@ -27,8 +27,8 @@ class Status(object):
                     elapsedProgramTime=self.elapsed_program_time,
                     elapsedStepTime=self.elapsed_step_time,
                     heatRunning=self.heat_running,
-                    heatOn=self.heat_on,
-                    vacuumOn=self.vacuum_on,
+                    heatOn=self.lamp_on,
+                    vacuumOn=self.pump_on,
                     vacuumRunning=self.vacuum_running,
                     programRunning=self.program_running,
                     vacuumTimeRemaining=self.vacuum_time_remaining,
@@ -85,8 +85,8 @@ class Status(object):
         return self._heat_running
 
     @property
-    def heat_on(self):
-        return self._heat_on
+    def lamp_on(self):
+        return self._lamp_on
 
     @property
     def vacuum_running(self):
@@ -105,8 +105,8 @@ class Status(object):
         return self._running
 
     @property
-    def vacuum_on(self):
-        return self._vacuum_on
+    def pump_on(self):
+        return self._pump_on
 
     @recording_time.setter
     def recording_time(self, value):
@@ -144,9 +144,9 @@ class Status(object):
     def heat_running(self, value):
         self._heat_running = value
 
-    @heat_on.setter
-    def heat_on(self, value):
-        self._heat_on = value
+    @lamp_on.setter
+    def lamp_on(self, value):
+        self._lamp_on = value
 
     @vacuum_running.setter
     def vacuum_running(self, value):
@@ -168,6 +168,6 @@ class Status(object):
     def running(self, value):
         self._running = value
 
-    @vacuum_on.setter
-    def vacuum_on(self, value):
-        self._vacuum_on = value
+    @pump_on.setter
+    def pump_on(self, value):
+        self._pump_on = value
