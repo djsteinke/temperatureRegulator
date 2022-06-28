@@ -5,7 +5,7 @@ from os import getcwd
 databaseURL = "https://rn5notifications-default-rtdb.firebaseio.com/"
 appKey = "tempReg"
 
-cred_obj = firebase_admin.credentials.Certificate(getcwd() + "\\firebaseKey.json")
+cred_obj = firebase_admin.credentials.Certificate("/home/pi/firebaseKey.json")
 default_app = firebase_admin.initialize_app(cred_obj, {
     'databaseURL': databaseURL
 })
