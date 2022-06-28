@@ -7,20 +7,27 @@ appKey = "tempReg"
 
 cred_obj = firebase_admin.credentials.Certificate(getcwd() + "\\firebaseKey.json")
 default_app = firebase_admin.initialize_app(cred_obj, {
-	'databaseURL': databaseURL
-	})
+    'databaseURL': databaseURL
+})
 
 ref = db.reference("/" + appKey)
 
 
-class FirebaseDb(object):
-	def __init__(self):
-		self._programs = ref.get("programs")
-		self._history = None
-		print(self._programs)
+def heat(on):
+    ref.get("status/heatOn")
+    for key, value in ref.items():
+        if key == "heatOn":
+            ref.child("heatOn").set(on)
 
-	@property
-	def programs(self):
-		self._programs = ref.get("programs")
-		print(self._programs)
-		return self._programs
+
+class FirebaseDb(object):
+    def __init__(self):
+        self._programs = ref.get("programs")
+        self._history = None
+        print(self._programs)
+
+    @property
+    def programs(self):
+        self._programs = ref.get("programs")
+        print(self._programs)
+        return self._programs
