@@ -202,18 +202,17 @@ class Hotbox(object):
     def record(self):
         self.recording = True
         if not self.recording:
-            self.status.history.clear()
+            #self.status.history.clear()
             self.record_start_time = time.perf_counter()
         history = History()
-        status = self.status
+        #status = self.status
         history.heat = self.lamp_relay.is_on
         history.vacuum = self.pump_relay.is_on
-        history.temp = status.temperature
+        #history.temp = status.temperature
         history.time = int(time.perf_counter() - self.record_start_time)
-        history.target_temp = status.hold_temperature
-        status.recording_time = history.time
-        status.add_history(history)
-        self.status = status
+        #history.target_temp = status.hold_temperature
+        #status.recording_time = history.time
+        #status.add_history(history)
         self.record_timer = threading.Timer(interval, self.record)
         self.record_timer.start()
 
