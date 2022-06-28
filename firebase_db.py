@@ -15,7 +15,7 @@ ref = db.reference("/" + appKey)
 
 def heat(on):
     ref.get("status")
-    ref.child("KKKKKKK").set(on)
+    ref.child("heatOn").set(on)
 
 
 def vacuum(on):
