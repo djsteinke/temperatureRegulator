@@ -14,7 +14,7 @@ ref = db.reference("/" + appKey)
 
 
 def heat(on):
-    ref.get("status/heatOn")
+    ref.get("status")
     for key, value in ref.items():
         if key == "heatOn":
             ref.child("heatOn").set(on)
