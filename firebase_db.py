@@ -15,7 +15,12 @@ ref = db.reference("/" + appKey)
 
 def heat(on):
     ref.get("status")
-    ref.child("heatOn").set(on)
+    ref.child("KKKKKKK").set(on)
+
+
+def vacuum(on):
+    ref.get("status")
+    ref.child("vacuumOn").set(on)
 
 
 class FirebaseDb(object):
