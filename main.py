@@ -80,8 +80,8 @@ def run():
     ret = get_response("run")
     ret['value'] = tp
     if tp == "program":
-        if not hotbox.status.program_running:
-            r = hotbox.start_program(program)
+        if 'program' not in firebase_db.status:
+            r = hotbox.run_program(program)
             ret['code'] = r[0]
             if r[0] != 200:
                 ret['error'] = r[1]
@@ -91,13 +91,13 @@ def run():
             ret['code'] = 301
             ret['error'] = "Program already running."
     elif tp == "heat" and temp > 0 and time > 0:
-        if not hotbox.status.heat_running:
+        if 'heat' not in firebase_db.status:
             hotbox.start_heat(temp, time * 60)
         else:
             ret['code'] = 301
             ret['error'] = "Heat already running."
     elif tp == "vacuum" and time > 0:
-        if not hotbox.status.vacuum_running:
+        if 'vacuum' not in firebase_db.status:
             hotbox.start_vacuum(time * 60)
         else:
             ret['code'] = 301
@@ -149,11 +149,10 @@ if __name__ == '__main__':
     logger.info("machine host_name[" + host_name + "]")
     print(host_name + "[" + host_name[0: 3] + "]")
     if host_name[0: 3] == "192" or host_name[0: 3] == "127":
-        host_name = "192.168.0.151"
+        # host_name = "192.168.0.151"
+        host_name = "192.168.0.153"
     else:
         host_name = "localhost"
     logger.info("app host_name[" + host_name + "]")
     hotbox.start()
-    print(f"temp[{firebase_db.temperature()}]")
-    firebase_db.temperature(firebase_db.temperature()+10)
     app.run(host=host_name, port=1983)

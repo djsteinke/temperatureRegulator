@@ -7,7 +7,6 @@ from ComplexEncoder import ComplexEncoder
 from static import get_temp
 from relay import Relay
 from history import History
-from define.program import Program
 import firebase_db
 
 module_logger = logging.getLogger('main.hotbox')
@@ -20,7 +19,7 @@ vacuum_pin = 30
 
 class Hotbox(object):
     def __init__(self):
-        self._program = Program()
+        self._program = {}
         self._hold_timer = None
         self._step_timer = None
         self._heat_timer = None
@@ -45,7 +44,6 @@ class Hotbox(object):
         return dict(programStartTime=self.program_start_time,
                     stepStartTime=self.step_start_time,
                     recordStartTime=self.record_start_time,
-                    status=self.status,
                     program=self.program)
 
     def start_heat(self, temp, run_time):
@@ -90,41 +88,38 @@ class Hotbox(object):
         firebase_db.pump_on(False)
         firebase_db.vacuum()
 
-    def start_program(self, name):
+    def run_program(self, name):
         module_logger.info(f"Program.run({name})")
-        self.status.running = "program"
         found = False
-        for p in self.settings.programs:
-            print(p.name)
-            if p.name == name:
-                self.program = p
+        for key, value in firebase_db.programs:
+            print(key)
+            if key == name:
+                self.program = value
                 found = True
+                firebase_db.program(key, 0, value)
                 break
         if found:
-            if self.heat_timer is not None:
-                self.stop_heat()
-            self.status.vacuum_running = False
-            self.program_start_time = time.perf_counter()
-            self.status.program_running = True
-            self.status.running = name
-            self.hold_timer = None
-            threading.Timer(1, self.run_step).start()
-            if not self.recording:
-                self.record()
+            threading.Timer(0.1, self.start_program).start()
             module_logger.info(f"Program {name} Started")
             return [200, f"Program {name} Started"]
         else:
             module_logger.error(f"Program {name} Not Found")
             return [400, f"Program {name} Not Found"]
 
+    def start_program(self):
+        if not self.recording:
+            self.record()
+        self.program_start_time = time.perf_counter()
+        self.hold_timer.cancel()
+        self.hold_timer = None
+        if 'heat' in firebase_db.status:
+            self.stop_heat()
+        if 'vacuum' in firebase_db.status:
+            self.stop_vacuum()
+        self.run_step()
+
     def end_program(self):
-        self.status.running = None
-        self.status.step = -1
-        self.status.hold_temperature = 0
-        self.status.elapsed_program_time = 0
         self.program_start_time = 0
-        self.status.program_running = False
-        self.status.running = None
         if self.hold_timer is not None:
             self.hold_timer.cancel()
             self.hold_timer = None
@@ -133,37 +128,32 @@ class Hotbox(object):
             self.step_timer = None
         self.lamp_relay.force_off()
         self.pump_relay.force_off()
-        self.status.lamp_on = self.lamp_relay.is_on
-        self.status.pump_on = self.pump_relay.is_on
+        firebase_db.program()
         module_logger.info(f"Program Ended")
         if self.callback is not None:
             self.callback()
 
     def run_step(self):
         self.step_start_time = None
-        if self.status.program_running and self.status.step < len(self.program.steps):
-            found = False
-            for obj in self.program.steps:
-                if obj.step == self.status.step:
-                    found = True
+        if 'program' in firebase_db.status and firebase_db.status['program']['step'] < firebase_db.status['program']['stepCnt']:
+            for key, value in self.program:
+                if key == firebase_db.status['program']['step']:
                     self.step_start_time = time.perf_counter()
-                    t = obj.time*60
-                    self.status.hold_temperature = float(obj.temperature)
-                    self.status.step_time = t
+                    firebase_db.program_step(key, value)
+                    t = value['timeSet']
+                    self.step_timer = threading.Timer(t, self.run_step)
+                    self.step_timer.start()
                     if self.hold_timer is not None:
                         self.hold_timer.cancel()
                         self.hold_timer = None
                     self.hold_step()
-                    self.step_timer = threading.Timer(t, self.run_step)
-                    self.step_timer.start()
-                    if obj.pump_on:
+                    if value['pumpOn']:
                         self.pump_relay.run_time = t
                         if not self.pump_relay.is_on:
                             self.pump_relay.on()
-                        self.status.pump_on = True
-            self.status.program_running = found
+                    firebase_db.pump_on(self.pump_relay.is_on)
             module_logger.debug(json.dumps(self.repr_json(), cls=ComplexEncoder))
-            if not self.status.program_running:
+            if 'program' not in firebase_db.status:
                 self.end_program()
         else:
             self.end_program()
@@ -183,10 +173,10 @@ class Hotbox(object):
             self.end_program()
         firebase_db.temperature(t[0])
         firebase_db.humidity(t[1])
-        if self.status.hold_temperature > 0:
-            t_h = self.status.hold_temperature + 1.0
-            t_l = self.status.hold_temperature - 1.0
-            t = self.status.temperature
+        if firebase_db.hold_temp() > 0:
+            t_h = firebase_db.hold_temp() + 1.0
+            t_l = firebase_db.hold_temp() - 1.0
+            t = firebase_db.temperature()
             if t > max_temp_c:
                 self.lamp_relay.force_off()
             else:
@@ -195,7 +185,7 @@ class Hotbox(object):
                 elif t < t_l and not self.lamp_relay.is_on:
                     self.lamp_relay.on()
             firebase_db.lamp_on(self.lamp_relay.is_on)
-        self.status.lamp_on = self.lamp_relay.is_on
+        firebase_db.save_status()
         self.hold_timer = threading.Timer(interval, self.hold_step)
         self.hold_timer.start()
 

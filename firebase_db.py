@@ -10,14 +10,18 @@ default_app = firebase_admin.initialize_app(cred_obj, {
     'databaseURL': databaseURL
 })
 
-ref = db.reference(appKey + "/status")
-status = ref.get()
+ref = db.reference(appKey)
+status = ref.child("status").get()
+programs = ref.child("programs").get()
+
+
+def save_status():
+    ref.set(status)
 
 
 def temperature(t=-100):
     if -100 < t != status['temperature']:
         status['temperature'] = t
-        ref.set(status)
     else:
         t = status['temperature']
     return t
@@ -26,7 +30,6 @@ def temperature(t=-100):
 def humidity(h=-1):
     if -1 < h != status['humidity']:
         status['humidity'] = h
-        ref.set(status)
     else:
         h = status['humidity']
     return h
@@ -42,18 +45,18 @@ def hold_temp():
 
 
 def lamp_on(on=None):
-    if on is not None and status.child("lampOn").get() != on:
-        status.child("lampOn").set(on)
+    if on is not None and status["lampOn"] != on:
+        status["lampOn"] = on
     else:
-        on = status.child("lampOn").get()
+        on = status["lampOn"]
     return on
 
 
 def pump_on(on=None):
-    if on is not None and status.child("pumpOn").get() != on:
-        status.child("pumpOn").set(on)
+    if on is not None and status["pumpOn"] != on:
+        status["pumpOn"] = on
     else:
-        on = status.child("pumpOn").get()
+        on = status["pumpOn"]
     return on
 
 
@@ -61,24 +64,51 @@ def get_programs():
     return ref.get("programs")
 
 
-def heat(run_time=-1, hold_t=-1):
-    h = status.child("heat")
-    if run_time > 0:
-        h.child("startTime").set(int(time.time()))
-        h.child("endTime").set(int(time.time()) + run_time)
-        h.child("tempSet").set(hold_t)
-        h.child("timeSet").set(run_time)
+def program(name=None, step=-1, steps=None):
+    if name is not None:
+        status['program'] = {}
+        status['program']['name'] = name
+        status['program']['step'] = step
+        step_count = 0
+        details = {}
+        for key, value in steps:
+            step_count += 1
+            if int(key) == step:
+                details = value
+        status['program']['stepCnt'] = step_count
+        status['program']['tempSet'] = details['tempSet']
+        status['program']['pumpOn'] = details['pumpOn']
+        status['program']['startTime'] = int(time.time())
+        status['program']['endTime'] = int(time.time()) + details['runTime']
     else:
-        h.set({})
+        del status['program']
+
+
+def program_step(step, details):
+    status['program']['step'] = step
+    status['program']['tempSet'] = details['tempSet']
+    status['program']['pumpOn'] = details['pumpOn']
+    status['program']['startTime'] = int(time.time())
+    status['program']['endTime'] = int(time.time()) + details['runTime']
+
+
+def heat(run_time=-1, hold_t=-1):
+    if run_time > 0:
+        status['heat'] = {}
+        status['heat']['startTime'] = int(time.time())
+        status['heat']['endTime'] = int(time.time()) + run_time
+        status['heat']['tempSet'] = hold_t
+        status['heat']['timeSet'] = run_time
+    else:
+        del status['heat']
 
 
 def vacuum(run_time=-1):
-    v = status.child("vacuum")
     if run_time > 0:
-        v.child("startTime").set(time.time())
-        v.child("endTime").set(int(time.time()) + run_time)
-        v.child("time").set(run_time)
+        status['vacuum'] = {}
+        status['vacuum']['startTime'] = int(time.time())
+        status['vacuum']['endTime'] = int(time.time()) + run_time
+        status['vacuum']['timeSet'] = run_time
     else:
-        v.set({})
-
+        del status['vacuum']
 
