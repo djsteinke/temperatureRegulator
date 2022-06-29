@@ -93,7 +93,7 @@ def run():
             ret['error'] = "Program already running."
     elif tp == "heat" and temp > 0 and time > 0:
         if 'heat' not in firebase_db.status:
-            hotbox.start_heat(temp, time * 60)
+            hotbox.start_heat(time * 60, temp)
             firebase_db.save_status()
         else:
             ret['code'] = 301
