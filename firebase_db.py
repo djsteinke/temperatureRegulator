@@ -100,7 +100,7 @@ def heat(run_time=-1, hold_t=-1):
         status['heat']['tempSet'] = hold_t
         status['heat']['timeSet'] = run_time
     else:
-        del status['heat']
+        ref.child('status').child('heat').update({})
 
 
 def vacuum(run_time=-1):
