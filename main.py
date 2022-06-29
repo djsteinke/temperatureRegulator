@@ -113,13 +113,13 @@ def cancel():
     tp = request.args.get('type', default='', type=str)
     ret = get_response("cancel")
     ret['value'] = tp
-    if tp == "program":
+    if tp == "program" and 'program' in firebase_db.status:
         hotbox.end_program()
         firebase_db.save_status()
-    elif tp == "heat":
+    elif tp == "heat" and 'heat' in firebase_db.status:
         hotbox.stop_heat()
         firebase_db.save_status()
-    elif tp == "vacuum":
+    elif tp == "vacuum" and 'vacuum' in firebase_db.status:
         hotbox.stop_vacuum()
         firebase_db.save_status()
     return ret, 200

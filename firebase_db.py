@@ -1,3 +1,5 @@
+import json
+
 import firebase_admin
 from firebase_admin import db
 import time
@@ -102,6 +104,7 @@ def heat(run_time=-1, hold_t=-1):
     else:
         db.reference(appKey + "/status/heat").delete()
         del status['heat']
+        print(json.dumps(status))
 
 
 def vacuum(run_time=-1):
