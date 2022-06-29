@@ -63,6 +63,7 @@ class Hotbox(object):
         firebase_db.lamp_on(False)
         self.step_start_time = 0
         firebase_db.heat()
+        firebase_db.save_status()
         if self.heat_timer is not None:
             self.heat_timer.cancel()
             self.heat_timer = None
