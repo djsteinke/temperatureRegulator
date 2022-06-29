@@ -82,6 +82,7 @@ def run():
     if tp == "program":
         if 'program' not in firebase_db.status:
             r = hotbox.run_program(program)
+            firebase_db.save_status()
             ret['code'] = r[0]
             if r[0] != 200:
                 ret['error'] = r[1]
@@ -93,12 +94,14 @@ def run():
     elif tp == "heat" and temp > 0 and time > 0:
         if 'heat' not in firebase_db.status:
             hotbox.start_heat(temp, time * 60)
+            firebase_db.save_status()
         else:
             ret['code'] = 301
             ret['error'] = "Heat already running."
     elif tp == "vacuum" and time > 0:
         if 'vacuum' not in firebase_db.status:
             hotbox.start_vacuum(time * 60)
+            firebase_db.save_status()
         else:
             ret['code'] = 301
             ret['error'] = "Vacuum already running."
@@ -112,10 +115,13 @@ def cancel():
     ret['value'] = tp
     if tp == "program":
         hotbox.end_program()
+        firebase_db.save_status()
     elif tp == "heat":
         hotbox.stop_heat()
+        firebase_db.save_status()
     elif tp == "vacuum":
         hotbox.stop_vacuum()
+        firebase_db.save_status()
     return ret, 200
 
 
