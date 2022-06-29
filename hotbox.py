@@ -50,8 +50,8 @@ class Hotbox(object):
         self.step_start_time = time.perf_counter()
         if run_time is None or run_time == 0:
             run_time = 1800
-        self.hold_step()
         firebase_db.heat(temp, run_time)
+        self.hold_step()
         if self.heat_timer is not None:
             self.heat_timer.cancel()
             self.heat_timer = None
