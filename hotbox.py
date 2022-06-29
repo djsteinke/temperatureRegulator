@@ -51,6 +51,7 @@ class Hotbox(object):
         if run_time is None or run_time == 0:
             run_time = 1800
         firebase_db.heat(temp, run_time)
+        firebase_db.save_status()
         self.hold_step()
         if self.heat_timer is not None:
             self.heat_timer.cancel()
@@ -80,6 +81,7 @@ class Hotbox(object):
         self.pump_relay.on()
         firebase_db.pump_on(True)
         firebase_db.vacuum(run_time)
+        firebase_db.save_status()
         if not self.recording:
             self.record()
 
@@ -88,6 +90,7 @@ class Hotbox(object):
         self.pump_relay.force_off()
         firebase_db.pump_on(False)
         firebase_db.vacuum()
+        firebase_db.save_status()
 
     def run_program(self, name):
         module_logger.info(f"Program.run({name})")

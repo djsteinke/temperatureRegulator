@@ -83,7 +83,7 @@ def program(name=None, step=-1, steps=None):
         status['program']['startTime'] = int(time.time())
         status['program']['endTime'] = int(time.time()) + details['runTime']
     else:
-        del status['program']
+        status['program'] = {}
 
 
 def program_step(step, details):
@@ -102,8 +102,8 @@ def heat(run_time=-1, hold_t=-1):
         status['heat']['tempSet'] = hold_t
         status['heat']['timeSet'] = run_time
     else:
-        #db.reference(appKey + "/status/heat").delete()
-        #del status['heat']
+        # db.reference(appKey + "/status/heat").delete()
+        # del status['heat']
         status['heat'] = {}
         print(json.dumps(status))
 
@@ -115,5 +115,5 @@ def vacuum(run_time=-1):
         status['vacuum']['endTime'] = int(time.time()) + run_time
         status['vacuum']['timeSet'] = run_time
     else:
-        del status['vacuum']
+        status['vacuum'] = {}
 
