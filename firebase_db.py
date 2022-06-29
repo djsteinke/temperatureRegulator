@@ -16,7 +16,7 @@ programs = ref.child("programs").get()
 
 
 def save_status():
-    ref.set(status)
+    ref.child("status").set(status)
 
 
 def temperature(t=-100):
